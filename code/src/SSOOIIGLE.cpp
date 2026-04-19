@@ -1,0 +1,1 @@
+// MANAGER. Punto de entrada del programa. Hace fork de los dos procesos (SistemaPago y Clientes/Buscadores) y espera su finalizacion. 

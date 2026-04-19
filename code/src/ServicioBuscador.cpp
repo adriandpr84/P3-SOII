@@ -1,0 +1,1 @@
+// Representa una replica de buscadores. Crea hilos con funcioanlidad de la clase LibroBuscador por cada libro 
