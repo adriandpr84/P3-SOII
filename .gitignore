@@ -1,41 +1,36 @@
-# Prerequisites
-*.d
+# --- Directorios Makefile ---
+code/obj/
+code/bin/
 
-# Compiled Object files
-*.slo
-*.lo
+# --- Binarios y Librerías  ---
 *.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Linker files
-*.ilk
-
-# Debugger Files
-*.pdb
-
-# Compiled Dynamic libraries
+*.out
+*.exe
 *.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
 *.a
 *.lib
+*.dll
 
-# Executables
-*.exe
-*.out
-*.app
+# --- Archivos de Prueba y Dummies ---
+# Cualquier archivo que empiece por dummy_ será ignorado
+**/dummy_*
+# Ignora logs y resultados de ejecuciones
+results_*.txt
+*.log
 
-# debug information files
+# --- Archivos temporales de Editores ---
+*~
+*.swp
+*.swo
+
+# --- Configuración de Entorno e IDEs ---
+.vscode/
+*.pdb
 *.dwo
+*.d
+*.sync-conflict-*
+.DS_Store
+.directory
+
+# --- Datos (Libros) ---
+!libros/*.txt
