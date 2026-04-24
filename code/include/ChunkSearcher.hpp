@@ -1,18 +1,18 @@
 /**
  * Project      : Practica 3 de Sistemas Operativos II
- * Program      : Searcher.hpp
+ * Program      : ChunkSearcher.hpp
  * Author       : Adrián Díaz-Plaza Remesal
  * Date created : 02/03/2026
- * Purpose      : Archivo de cabecera de la clase Searcher
+ * Purpose      : Archivo de cabecera de la clase ChunkSearcher
  * Revision     :
- * 02/03/2026 - Adrián - Creación de la estructura de la clase Searcher según lo definido en clase 
+ * 02/03/2026 - Adrián - Creación de la estructura de la clase ChunkSearcher según lo definido en clase 
  * Desde el 16/03/2026 hasta el 27/03/2026 se han ido añadiendo metodos necesarios a la clase 
- * según se desarrollaba funcionalidad y se refactorizaba en el Searcher.cpp
+ * según se desarrollaba funcionalidad y se refactorizaba en el ChunkSearcher.cpp
  */
 
 
-#ifndef SEARCHER_HPP
-#define SEARCHER_HPP
+#ifndef CHUNKSEARCHER_HPP
+#define CHUNKSEARCHER_HPP
 
 #include "Occurrence.hpp"
 #include <fstream>
@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-class Searcher {
+class ChunkSearcher {
 
   private:
     enum class Direction { BACKWARD = -1, FORWARD = 1 };
@@ -53,7 +53,7 @@ class Searcher {
     bool is_in_range(int pos, const std::string &line);
 
   public:
-    Searcher(int _thread_id, int _start, int _end, std::streampos _start_byte, std::string _file_name,
+    ChunkSearcher(int _thread_id, int _start, int _end, std::streampos _start_byte, std::string _file_name,
              std::string _target_word, std::mutex &_searcher_mutex)
         : thread_id(_thread_id), start_line(_start), end_line(_end), start_line_byte(_start_byte),
           file_name(_file_name), target_word(_target_word), searcher_mutex(_searcher_mutex) {}
