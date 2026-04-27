@@ -3,13 +3,17 @@
  * Program      : BookSearcher.hpp
  * Author       : Adrián Díaz-Plaza Remesal
  * Purpose      : Archivo de cabecera de la clase BookSearcher
+ * Revision     :
+ * 18/03/2026 - Adrián - Creación de main minimo con procesamiento de argumentos y con un único hilo para pruebas. 
+ * 20/03/2026 - Adrián - Creación completa de main. Incluye division de texto, creacion de hilos e impresión por pantalla. 
+ * 24/03/2026 - Adrián - Control de edge cases en procesamiento de argumentos: Detección de binarios, validación de numero de hilos
+ * 19/04/2026 - Adrián - Encapsulación del main de la P2 en la clase BookSearcher.
  */
 
 
-#ifndef BOOKSEARCHER_HPP
-#define BOOKSEARCHER_HPP
+#pragma once
 
-#include "Searcher.hpp"
+#include "ChunkSearcher.hpp"
 #include <string>
 #include <vector>
 
@@ -18,7 +22,7 @@ class BookSearcher {
     std::string file_name;
     std::string target_word;
     int thread_count;
-    std::vector<Searcher> results;
+    std::vector<ChunkSearcher> chunks;
 
     // Metodos privados
     bool is_binary(const std::string &file_name);
@@ -26,9 +30,8 @@ class BookSearcher {
     void create_searcher_threads(std::vector<std::streampos> file_line_index);
 
   public:
-    BookSearcher(std::string _file_name, std::string _target_word, int _thread_count);
+    BookSearcher(std::string _file_name, std::string _target_word, int _thread_count)
+    : file_name(std::move(_file_name)), target_word(std::move(_target_word)), thread_count(_thread_count) { }
     void operator()();
-    std::vector<Searcher> get_results() const { return results; }
+    std::vector<ChunkSearcher> get_results() const { return chunks; }
 };
-
-#endif

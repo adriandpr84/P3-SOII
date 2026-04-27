@@ -1,6 +1,6 @@
 /**
  * Project      : Practica 3 de Sistemas Operativos II
- * Program      : Searcher.cpp
+ * Program      : ChunkSearcher.cpp
  * Author       : Adrián Díaz-Plaza Remesal
  * Date created : 16/03/2026
  * Purpose      : Clase buscador que proporciona funcionalidad a los hilos, para localizar las palabras en los libros.
@@ -11,14 +11,16 @@
  * 27/03/2026 - Adrián - Manejo de edge cases cuando las palabras anterior o posterior se encuentran en porciones de otros hilos
  */
 
-#include "../include/Searcher.hpp"
+#include "ChunkSearcher.hpp"
 #include <format>
 #include <iostream>
 
-void Searcher::operator()() { read_file(); }
+void ChunkSearcher::operator()() { 
+    read_file();
+}
 
 // Procesamiento de la parte de archivo que corresponda, orquestando la busqueda linea por linea.
-void Searcher::read_file() {
+void ChunkSearcher::read_file() {
     std::ifstream file(file_name);
     if (!file) {
         std::cerr << std::format("[HILO {}] Error al abrir {}\n", thread_id, file_name);
@@ -39,7 +41,7 @@ void Searcher::read_file() {
 }
 
 // Recupera la ultima palabra de la porcion anterior (de otro hilo)
-std::string Searcher::prepare_initial_context(std::ifstream &file) {
+std::string ChunkSearcher::prepare_initial_context(std::ifstream &file) {
     std::string line;
     if (start_line > 1 && std::getline(file, line)) {
         return find_and_extract_word(line, (int)line.size(), Direction::BACKWARD);
@@ -48,7 +50,7 @@ std::string Searcher::prepare_initial_context(std::ifstream &file) {
 }
 
 // Realiza la busqueda en una linea en concreto, usando los metodos auxiliares necesarios.
-void Searcher::process_line(std::string &line, int line_num, const std::string &previous_context) {
+void ChunkSearcher::process_line(std::string &line, int line_num, const std::string &previous_context) {
     size_t pos = 0;
     while ((pos = line.find(target_word, pos)) != std::string::npos) {
         if (is_valid_match((int)pos, target_word, line)) {
@@ -59,7 +61,7 @@ void Searcher::process_line(std::string &line, int line_num, const std::string &
 }
 
 // Extrae la primera palabra de la siguiente porcion (de otro hilo) y guarda en ocurrencias
-void Searcher::fetch_next_chunk_word(std::ifstream &file) {
+void ChunkSearcher::fetch_next_chunk_word(std::ifstream &file) {
     if (is_next_word_pending()) {
         std::string extra_next_line;
         if (std::getline(file, extra_next_line)) {
@@ -68,7 +70,7 @@ void Searcher::fetch_next_chunk_word(std::ifstream &file) {
     }
 }
 
-void Searcher::store_occurrence(const std::string &line_text, size_t match_pos, int line_num,
+void ChunkSearcher::store_occurrence(const std::string &line_text, size_t match_pos, int line_num,
                                     const std::string &last_word) {
 
     std::string provisional_prev_word = find_and_extract_word(line_text, match_pos - 1, Direction::BACKWARD);
@@ -82,7 +84,7 @@ void Searcher::store_occurrence(const std::string &line_text, size_t match_pos, 
 }
 
 // Si no se encuentra palabra anterior en la linea se completará con la ultima palabra de la linea anterior
-void Searcher::complete_pending_next_word(std::string &line_text) {
+void ChunkSearcher::complete_pending_next_word(std::string &line_text) {
     if (is_next_word_pending()) {
         std::string initial_word = find_and_extract_word(line_text, 0, Direction::FORWARD);
         std::lock_guard<std::mutex> lock(searcher_mutex);
@@ -90,14 +92,14 @@ void Searcher::complete_pending_next_word(std::string &line_text) {
     }
 }
 
-bool Searcher::is_next_word_pending() {
+bool ChunkSearcher::is_next_word_pending() {
     std::lock_guard<std::mutex> lock(searcher_mutex);
     return !occurrences.empty() && occurrences.back().get_next_word().empty();
 }
 
 // Dada una posicion en la linea del texto y una direccion de recorrido, 
 // recorre el texto y devuelve la primera palabra encontrada
-std::string Searcher::find_and_extract_word(const std::string &line, int pos, Direction dir) {
+std::string ChunkSearcher::find_and_extract_word(const std::string &line, int pos, Direction dir) {
     int cursor = pos;
     int step = static_cast<int>(dir);
 
@@ -123,7 +125,7 @@ std::string Searcher::find_and_extract_word(const std::string &line, int pos, Di
 }
 
 // Verifica que la coincidencia sea una palabra completa y no parte de otra (substring).
-bool Searcher::is_valid_match(int match_pos, std::string &target_word, std::string &line) {
+bool ChunkSearcher::is_valid_match(int match_pos, std::string &target_word, std::string &line) {
     int lower_bound = match_pos - 1;
     int upper_bound = match_pos + target_word.length();
 
@@ -138,9 +140,9 @@ bool Searcher::is_valid_match(int match_pos, std::string &target_word, std::stri
 
 // Un carácter es separador solo si NO es alfanumérico Y NO es multibyte (UTF-8).
 // Eso permite que tildes y eñes se consideren parte de la palabra.
-bool Searcher::is_separator(char c) {
+bool ChunkSearcher::is_separator(char c) {
     unsigned char character = (unsigned char)c;
     return !(isalnum(character) || character >= 0x80);
 }
 
-bool Searcher::is_in_range(int pos, const std::string &line) { return pos >= 0 && pos < (int)line.size(); }
+bool ChunkSearcher::is_in_range(int pos, const std::string &line) { return pos >= 0 && pos < (int)line.size(); }

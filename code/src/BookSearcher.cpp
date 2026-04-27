@@ -10,7 +10,7 @@
  * 19/04/2026 - Adrián - Encapsulación del main de la P2 en la clase BookSearcher.
  */
 
-#include "../include/BookSearcher.hpp"
+#include "BookSearcher.hpp"
 #include <cstring>
 #include <format>
 #include <fstream>
@@ -19,9 +19,6 @@
 #include <thread>
 #include <filesystem>
 #include <stdexcept>
-
-BookSearcher::BookSearcher(std::string _file_name, std::string _target_word, int _thread_count)
-    : file_name(std::move(_file_name)), target_word(std::move(_target_word)), thread_count(_thread_count) { }
 
 void BookSearcher::operator()() {
     // 1. Comprobaciones
@@ -45,6 +42,7 @@ void BookSearcher::operator()() {
     }
     
     create_searcher_threads(file_line_index);
+    
 }
 
 // Crea los hilos, ejecuta la búsqueda y guarda el vector de Buscadores en el atributo 'resultados'
@@ -59,7 +57,7 @@ void BookSearcher::create_searcher_threads(std::vector<std::streampos> file_line
 
     std::vector<std::thread> threads;
     
-    results.reserve(thread_count);
+    chunks.reserve(thread_count);
     threads.reserve(thread_count);
     
     int read_chunk = total_lines / thread_count;
@@ -72,10 +70,9 @@ void BookSearcher::create_searcher_threads(std::vector<std::streampos> file_line
         std::streampos start_line_byte =
             (thread_id == 1) ? file_line_index[0] : file_line_index[context_line_index];
             
-        // Usamos emplace_back directamente en el atributo de la clase
-        results.emplace_back(thread_id, start_line, end_line, start_line_byte, file_name, target_word,
+        chunks.emplace_back(thread_id, start_line, end_line, start_line_byte, file_name, target_word,
                                 searcher_mutex);
-        threads.emplace_back(std::ref(results.back()));
+        threads.emplace_back(std::ref(chunks.back()));
         start_line = end_line + 1;
     }
 
