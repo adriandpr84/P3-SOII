@@ -11,7 +11,7 @@
  * 27/03/2026 - Adrián - Manejo de edge cases cuando las palabras anterior o posterior se encuentran en porciones de otros hilos
  */
 
-#include "../include/ChunkSearcher.hpp"
+#include "ChunkSearcher.hpp"
 #include <format>
 #include <iostream>
 

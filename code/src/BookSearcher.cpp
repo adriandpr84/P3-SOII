@@ -10,7 +10,7 @@
  * 19/04/2026 - Adrián - Encapsulación del main de la P2 en la clase BookSearcher.
  */
 
-#include "../include/BookSearcher.hpp"
+#include "BookSearcher.hpp"
 #include <cstring>
 #include <format>
 #include <fstream>

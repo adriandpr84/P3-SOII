@@ -8,8 +8,7 @@
  */
 
 
-#ifndef SEARCHSERVICE_HPP
-#define SEARCHSERVICE_HPP
+#pragma once
 
 #include "BookSearcher.hpp"
 #include <string>
@@ -25,5 +24,3 @@ class SearchService {
         : book_paths(_book_paths), thread_count(_thread_count) {}
     void operator()();
 };
-
-#endif

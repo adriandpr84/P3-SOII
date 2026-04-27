@@ -10,8 +10,7 @@
 
 
 
-#ifndef COMMON_HPP
-#define COMMON_HPP
+#pragma once
 
 #include "Occurrence.hpp"
 #include "SearchResultsTypes.hpp"
@@ -24,5 +23,3 @@ struct SearchRequest {
     std::string target_word;
 };
 
-
-#endif

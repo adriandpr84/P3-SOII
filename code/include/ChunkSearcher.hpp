@@ -11,8 +11,7 @@
  */
 
 
-#ifndef CHUNKSEARCHER_HPP
-#define CHUNKSEARCHER_HPP
+#pragma once
 
 #include "Occurrence.hpp"
 #include <fstream>
@@ -66,5 +65,3 @@ class ChunkSearcher {
     int get_end() const { return end_line; };
     std::string get_target_word() const { return target_word; }
 };
-
-#endif

@@ -8,8 +8,7 @@
  * 
  */
 
-#ifndef INTERNAL_REQUESTS_HPP
-#define INTERNAL_REQUESTS_HPP
+#pragma once
 
 #include "CommonTypes.hpp"
 #include <future>
@@ -18,5 +17,3 @@ struct InternalSearchRequest {
     SearchRequest Request;
     std::promise<std::vector<BookResult>> request_prom;
 };
-
-#endif

@@ -10,8 +10,7 @@
  */
 
 
-#ifndef OCCURRENCE_HPP
-#define OCCURRENCE_HPP
+#pragma once
 
 #include <string>
 
@@ -30,5 +29,3 @@ class Occurrence {
     const std::string &get_next_word() const { return next_word; }
     void set_next_word(std::string word) { next_word = std::move(word); }
 };
-
-#endif

@@ -8,8 +8,7 @@
  */
 
 
-#ifndef SEARCHRESULTSTYPES_HPP
-#define SEARCHRESULTSTYPES_HPP
+#pragma once
 
 #include <string>
 #include <vector>
@@ -32,6 +31,4 @@ struct SearchResult {
     std::vector<BookResult> results_per_book;
 };
 
-
-#endif
 

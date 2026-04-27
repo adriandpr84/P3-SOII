@@ -11,8 +11,7 @@
  */
 
 
-#ifndef BOOKSEARCHER_HPP
-#define BOOKSEARCHER_HPP
+#pragma once
 
 #include "ChunkSearcher.hpp"
 #include <string>
@@ -31,10 +30,8 @@ class BookSearcher {
     void create_searcher_threads(std::vector<std::streampos> file_line_index);
 
   public:
-    BookSearcher::BookSearcher(std::string _file_name, std::string _target_word, int _thread_count)
+    BookSearcher(std::string _file_name, std::string _target_word, int _thread_count)
     : file_name(std::move(_file_name)), target_word(std::move(_target_word)), thread_count(_thread_count) { }
     void operator()();
     std::vector<ChunkSearcher> get_results() const { return chunks; }
 };
-
-#endif

@@ -8,8 +8,7 @@
  */
 
 
-#ifndef PRIORITYSCHEDULER_HPP
-#define PRIORITYSCHEDULER_HPP
+#pragma once
 
 #include <string>
 #include <vector>
@@ -21,10 +20,8 @@ class PriorityScheduler {
 public:
     void push(InternalSearchRequest petition, int queue_index);
     InternalSearchRequest pop();
+    PriorityScheduler();
 
 private:
     std::vector<std::queue<InternalSearchRequest>> petitions_queue;
-    PriorityScheduler();
 };
-
-#endif 
