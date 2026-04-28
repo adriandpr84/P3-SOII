@@ -18,48 +18,43 @@ ninguna cola.
 
 #include "PriorityScheduler.hpp"
 
-
 PriorityScheduler::PriorityScheduler(std::vector<int> weights)
-    : gen(std::random_device{}()),         
-      dist(weights.begin(), weights.end()) 
-{}
+    : gen(std::random_device{}()), dist(weights.begin(), weights.end()), request_queues(weights.size()) {}
 
 void PriorityScheduler::push(InternalSearchRequest request, int queue_index) {
 
 	std::lock_guard<std::mutex> lock(queue_mutex);
-	request_queue[queue_index].push(request);
-	global_request_count++;
+    {
+        request_queues[queue_index].requests.push(std::move(request));
+	    global_request_count++;
+    }
+    cv_empty_queue.notify_one();
 }
-
 
 InternalSearchRequest PriorityScheduler::pop() {
 
-	while (true) {
-		std::unique_lock<std::mutex> lock(queue_mutex);
-		cv_empty_queue.wait(lock, [this] { return global_request_count > 0; });
+	std::unique_lock<std::mutex> lock(queue_mutex);
+	cv_empty_queue.wait(lock, [this] { return global_request_count > 0; });
+	int n_queues = request_queues.size();
+	int start_idx = dist(gen);
 
-		int n_queues = request_queue.size();
-        int start_idx = dist(gen);
+	for (int i = 0; i < n_queues; ++i) {
+		int current_idx = (start_idx + i) % n_queues;
 
-        InternalSearchRequest request = {};
+		if (!request_queues[current_idx].requests.empty()) {
+			InternalSearchRequest request = std::move(request_queues[current_idx].requests.front());
+			request_queues[current_idx].requests.pop();
+			global_request_count--;
 
-		for (int i = 0; i < n_queues; ++i) {
-            int current_idx = (start_idx + i) % n_queues;
-
-            if (!request_queue[current_idx].empty()) {
-                InternalSearchRequest request = std::move(request_queue[current_idx].front());
-                request_queue[current_idx].pop();
-                
-                global_request_count--; 
-                return request;
-            }
-        }
+			return request;
+		}
 	}
+    
+    return {}; // Nunca se llegaría aquí
 }
 
+/*
+    *Posiblemente se pueda incorporar en un futuro aging de colas para evitar inanición,
+    sin embargo, habria que valorar si eso afectaria de forma notable a la proporcion global a largo plazo.
 
-    /*
-	    *Posiblemente se pueda incorporar en un futuro aging de colas para evitar inanición,
-	    sin embargo, habria que valorar si eso afectaria de forma notable a la proporcion global a largo plazo.
-
-	*/
+*/

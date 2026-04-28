@@ -34,3 +34,12 @@ results_*.txt
 
 # --- Datos (Libros) ---
 !libros/*.txt
+
+# --- Tests ---
+code/tests/*
+code/tests/build/
+
+# Conservar tests
+!code/tests/CMakeLists.txt
+!code/tests/test_priority_scheduler.cpp
+

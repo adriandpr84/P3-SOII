@@ -17,7 +17,7 @@
 #include <mutex>
 #include "SearchTypes.hpp"
 
-#define MAX_AGE 100
+#define MAX_AGE 1000
 
 struct QueueSlot {
     std::queue<InternalSearchRequest> requests;
@@ -40,6 +40,6 @@ private:
     std::vector<int> weights;
 
     std::vector<QueueSlot> request_queues;
-    int global_request_count;
+    int global_request_count = 0;
 
 };
