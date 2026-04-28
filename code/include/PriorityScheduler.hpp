@@ -17,29 +17,33 @@
 #include <mutex>
 #include "SearchTypes.hpp"
 
-#define MAX_AGE 1000
+constexpr int MAX_STARVATION = 100;
 
-struct QueueSlot {
-    std::queue<InternalSearchRequest> requests;
-    int age = 0;
+struct ManagedQueue {
+    std::queue<InternalSearchRequest> requests_queue;
+    int starvation_counter = 0;
 };
-
 
 class PriorityScheduler {
 public:
+    PriorityScheduler(std::vector<int> priority_weights);
+
     void push(InternalSearchRequest petition, int queue_index);
     InternalSearchRequest pop();
-    PriorityScheduler(std::vector<int> weights);
 
 private:
-    std::mutex queue_mutex;
+
+    std::mutex scheduler_mutex;
     std::condition_variable cv_empty_queue;
 
-    std::mt19937 gen;
-    std::discrete_distribution<int> dist;
-    std::vector<int> weights;
+    std::mt19937 random_gen;
+    std::discrete_distribution<int> priority_selector;
 
-    std::vector<QueueSlot> request_queues;
-    int global_request_count = 0;
+    std::vector<ManagedQueue> priority_queues;
+    int total_pending_requests = 0;
 
+
+    int determine_queue_extraction();
+    InternalSearchRequest extract_from_queue(ManagedQueue& target_queue);
+    void update_starvation(int served_idx);
 };

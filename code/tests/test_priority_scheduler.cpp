@@ -17,7 +17,7 @@ InternalSearchRequest create_dummy_request(int client_id) {
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        std::cerr << "Uso: " << argv[0] << " [FIFO|FALLBACK|RATIO|STRESS]\n";
+        std::cerr << "Uso: " << argv[0] << " [FIFO|FALLBACK|RATIO|STRESS|STARVATION]\n";
         return 1;
     }
 
@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
     
     else if (test_type == "STRESS") {
         PriorityScheduler scheduler({80, 20});
-        const int num_prod = 10, num_cons = 4, reqs_x_prod = 1000;
+        const int num_prod = 100, num_cons = 4, reqs_x_prod = 1000;
         std::atomic<int> procesadas{0};
         std::vector<std::thread> hilos;
 
@@ -75,6 +75,31 @@ int main(int argc, char* argv[]) {
         for (int i = 0; i < num_cons; ++i) scheduler.push(create_dummy_request(-99), 0);
         for (int i = 0; i < num_cons; ++i) hilos[i].join();
         
+    }
+
+    else if (test_type == "STARVATION") {
+        PriorityScheduler scheduler({100, 0});
+        const int MAX_AGE = 100; 
+
+        scheduler.push(create_dummy_request(1), 1);
+
+        for (int i = 0; i <= MAX_AGE; i++) {
+            scheduler.push(create_dummy_request(0), 0);
+        }
+
+        for (int i = 0; i < MAX_AGE; i++) {
+            if (scheduler.pop().Request.client_id != 0) {
+                std::cerr << "La petición salió antes de tiempo.\n";
+                return 1; 
+            }
+        }
+
+        if (scheduler.pop().Request.client_id != 1) {
+            std::cerr << "La petición no ha salido (hay starvation)\n";
+            return 1;
+        }
+
+        std::cout << "TEST STARVATION: OK\n";
     }
 
     return 0;

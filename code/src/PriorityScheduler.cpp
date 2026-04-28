@@ -7,54 +7,74 @@
  * 27/05/2026 - Adrián - Creación de stubs para permitir compilación.
  */
 
-/*
-
-Se encargará de alamcenar las colas de peticiones, será usado por SearchManager (que contiene la logica de negocio)
-La unica funcion de esta clase es almacenar las peticiones y sacarlas segun prioridad
-Este monitor estará protegido con un mutex y una CV para dormir a los hilos SearchService en caso de que no haya nada en
-ninguna cola.
-
-*/
 
 #include "PriorityScheduler.hpp"
 
 PriorityScheduler::PriorityScheduler(std::vector<int> weights)
-    : gen(std::random_device{}()), dist(weights.begin(), weights.end()), request_queues(weights.size()) {}
+    : random_gen(std::random_device{}()), 
+      priority_selector(weights.begin(), weights.end()), 
+      priority_queues(weights.size()) {}
 
+   
 void PriorityScheduler::push(InternalSearchRequest request, int queue_index) {
-
-	std::lock_guard<std::mutex> lock(queue_mutex);
-    {
-        request_queues[queue_index].requests.push(std::move(request));
-	    global_request_count++;
-    }
+    std::lock_guard<std::mutex> lock(scheduler_mutex);
+    
+    priority_queues[queue_index].requests_queue.push(std::move(request));
+    total_pending_requests++;
+    
     cv_empty_queue.notify_one();
 }
 
 InternalSearchRequest PriorityScheduler::pop() {
+    std::unique_lock<std::mutex> lock(scheduler_mutex);
+    cv_empty_queue.wait(lock, [this] { return total_pending_requests > 0; });
 
-	std::unique_lock<std::mutex> lock(queue_mutex);
-	cv_empty_queue.wait(lock, [this] { return global_request_count > 0; });
-	int n_queues = request_queues.size();
-	int start_idx = dist(gen);
+    int served_idx = determine_queue_extraction();
+    InternalSearchRequest request = extract_from_queue(priority_queues[served_idx]);
+    update_starvation(served_idx);
 
-	for (int i = 0; i < n_queues; ++i) {
-		int current_idx = (start_idx + i) % n_queues;
-
-		if (!request_queues[current_idx].requests.empty()) {
-			InternalSearchRequest request = std::move(request_queues[current_idx].requests.front());
-			request_queues[current_idx].requests.pop();
-			global_request_count--;
-
-			return request;
-		}
-	}
-    
-    return {}; // Nunca se llegaría aquí
+    return request;
 }
 
-/*
-    *Posiblemente se pueda incorporar en un futuro aging de colas para evitar inanición,
-    sin embargo, habria que valorar si eso afectaria de forma notable a la proporcion global a largo plazo.
 
-*/
+int PriorityScheduler::determine_queue_extraction() {
+	int n_queues = static_cast<int>(priority_queues.size());
+
+	//Extracción por starvation
+    for (int i = 0; i < n_queues; ++i) {
+        if (priority_queues[i].starvation_counter >= MAX_STARVATION && 
+            !priority_queues[i].requests_queue.empty()) {
+            return i;
+        }
+    }
+
+	//Extracción por prioridad
+    int start_idx = priority_selector(random_gen);
+    for (int i = 0; i < n_queues; ++i) {
+        int current_idx = (start_idx + i) % priority_queues.size();
+        if (!priority_queues[current_idx].requests_queue.empty()) {
+            return current_idx;
+        }
+    }
+    
+    return 0;
+}
+
+InternalSearchRequest PriorityScheduler::extract_from_queue(ManagedQueue& target_queue) {
+    InternalSearchRequest request = std::move(target_queue.requests_queue.front());
+    target_queue.requests_queue.pop();
+    
+    target_queue.starvation_counter = 0;
+    total_pending_requests--;               
+    
+    return request;
+}
+
+void PriorityScheduler::update_starvation(int served_idx) {
+	int n_queues = static_cast<int>(priority_queues.size());
+    for (int i = 0; i < n_queues; ++i) {
+        if (i != served_idx && !priority_queues[i].requests_queue.empty()) {
+            priority_queues[i].starvation_counter++;
+        }
+    }
+}
