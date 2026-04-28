@@ -13,15 +13,33 @@
 #include <string>
 #include <vector>
 #include <queue>
+#include <random>
+#include <mutex>
 #include "SearchTypes.hpp"
+
+#define MAX_AGE 100
+
+struct QueueSlot {
+    std::queue<InternalSearchRequest> requests;
+    int age = 0;
+};
 
 
 class PriorityScheduler {
 public:
     void push(InternalSearchRequest petition, int queue_index);
     InternalSearchRequest pop();
-    PriorityScheduler();
+    PriorityScheduler(std::vector<int> weights);
 
 private:
-    std::vector<std::queue<InternalSearchRequest>> petitions_queue;
+    std::mutex queue_mutex;
+    std::condition_variable cv_empty_queue;
+
+    std::mt19937 gen;
+    std::discrete_distribution<int> dist;
+    std::vector<int> weights;
+
+    std::vector<QueueSlot> request_queues;
+    int global_request_count;
+
 };
