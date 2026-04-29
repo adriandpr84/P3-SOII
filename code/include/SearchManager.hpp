@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <thread>
+#include <unordered_map>
 #include "CommonTypes.hpp"       // SearchResult y SearchRequest
 #include "SearchTypes.hpp"       // InternalSearchRequest
 #include "SearchService.hpp"
@@ -38,8 +39,10 @@ public:
     SearchManager& operator=(const SearchManager&) = delete;
 
 private:
+
+    std::unordered_map<ClientType, int> client_queue_map;
     std::vector<std::thread> searchers;
-    PriorityScheduler scheduler;
+    std::unique_ptr<PriorityScheduler> scheduler_ptr;
 
     SearchManager();
 };

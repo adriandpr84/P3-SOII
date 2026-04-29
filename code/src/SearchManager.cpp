@@ -15,9 +15,33 @@
 
 #include "SearchManager.hpp"
 
- 
+#define PATH_BOOKS
 
-SearchManager::SearchManager() {}
+SearchManager::SearchManager() {
+    /// --- Definición de prioridades --- ///
+    std::vector<std::pair<int, std::vector<ClientType>>> config_queues = {
+        { 80, { ClientType::PREMIUM_LIMITED, ClientType::PREMIUM_UNLIMITED } },
+        { 20, { ClientType::FREE } }
+    };
+    /// --------------------------------- ///
+    /*
+    // TODO: Implementar validación de config_queues  
+        - Comprobar que todas las keys sumen 100
+        - Comprobar que no falta ningun tipo  
+    */
+
+    std::vector<int> extracted_weights;
+    int actual_queue_index=0;
+    for (const auto& [priority, client_types] : config_queues) {
+        extracted_weights.push_back(priority);
+        for (const auto& client : client_types){
+            client_queue_map.emplace(client, actual_queue_index);
+        }
+        actual_queue_index++;
+
+    }
+    this->scheduler_ptr = std::make_unique<PriorityScheduler>(extracted_weights);
+}
 
 
 // ** Inicializacion del motor de busqueda, debe ser invocado en el hilo principal **
@@ -33,25 +57,23 @@ void SearchManager::init(){
 
 // ** El cliente debe invocar este método **
 SearchResult SearchManager::execute_search(SearchRequest request) { // Bloqueante
-    // TODO: Implementar lógica
-    /*
-    - Invocado por el cliente, introduce su peticion
-    - Esa peticion se envuelve en una peticion interna que contendrá promise
-    - Se determina a que cola debe ir
-    - Se llama a priorityscheduler.enqueue()
-    - Espera el resultado con future.get_value()
-    - return del resultado al cliente
-    */
-    return SearchResult{};
+
+    std::promise<std::vector<BookResult>> request_promise;
+    std::future<std::vector<BookResult>> request_future = request_promise.get_future();
+
+    InternalSearchRequest internal_request{request, std::move(request_promise)};
+
+    int queue_index = client_queue_map[request.type];
+    scheduler_ptr->push(std::move(internal_request), queue_index);
+
+    std::vector<BookResult> result = request_future.get();
+    //TODO: Medir tiempo
+    return SearchResult{0.0, result};
 }
 
 InternalSearchRequest SearchManager::get_search_petition() { //Bloqueante
-    // TODO: Implementar lógica
-    /*
-    - Invocado por SearchService.
-        priorityscheduler.pop()
-    */
-    return InternalSearchRequest{}; 
+
+    return scheduler_ptr->pop();
 }
 
 SearchManager::~SearchManager(){ 
