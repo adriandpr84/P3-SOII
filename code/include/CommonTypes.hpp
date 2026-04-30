@@ -15,7 +15,7 @@
 #include "Occurrence.hpp"
 #include "SearchResultsTypes.hpp"
 
-enum class ClientType { FREE, PREMIUM_LIMITED, PREMIUM_UNLIMITED };
+enum class ClientType { FREE, PREMIUM_LIMITED, PREMIUM_UNLIMITED, COUNT };
 
 struct SearchRequest {
     int client_id;

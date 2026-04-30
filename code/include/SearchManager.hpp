@@ -19,6 +19,11 @@
 #include "SearchService.hpp"
 #include "PriorityScheduler.hpp"
 
+struct PriorityEntry {
+    int priority;
+    std::vector<ClientType> client_types;
+};
+
 class SearchManager {
 public:
     static SearchManager& get_instance() {
@@ -43,6 +48,9 @@ private:
     std::unordered_map<ClientType, int> client_queue_map;
     std::vector<std::thread> searchers;
     std::unique_ptr<PriorityScheduler> scheduler_ptr;
+    bool is_running = false;
+
+    std::vector<int> build_and_validate_queues(const std::vector<PriorityEntry>& config);
 
     SearchManager();
 };

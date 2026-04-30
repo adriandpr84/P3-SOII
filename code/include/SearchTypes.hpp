@@ -15,5 +15,15 @@
 
 struct InternalSearchRequest {
     SearchRequest Request;
-    std::promise<std::vector<BookResult>> request_prom;
+    std::promise<std::vector<BookResult>> request_prom{};
+
+    std::future<std::vector<BookResult>> get_future() {
+        return request_prom.get_future();
+    }
 };
+struct BookMetadata {
+    std::string path;
+    std::vector<std::streampos> line_index;
+};
+
+
