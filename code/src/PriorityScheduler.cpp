@@ -52,7 +52,7 @@ int PriorityScheduler::determine_queue_extraction() {
 	//Extracción por prioridad
     int start_idx = priority_selector(random_gen);
     for (int i = 0; i < n_queues; ++i) {
-        int current_idx = (start_idx + i) % priority_queues.size();
+        int current_idx = (start_idx + i) % n_queues;
         if (!priority_queues[current_idx].requests_queue.empty()) {
             return current_idx;
         }
@@ -72,7 +72,7 @@ InternalSearchRequest PriorityScheduler::extract_from_queue(ManagedQueue& target
 }
 
 void PriorityScheduler::update_starvation(int served_idx) {
-	int n_queues = static_cast<int>(priority_queues.size());
+	int n_queues = static_cast<int>(priority_queues.size()-1);
     for (int i = 0; i < n_queues; ++i) {
         if (i != served_idx && !priority_queues[i].requests_queue.empty()) {
             priority_queues[i].starvation_counter++;

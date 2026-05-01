@@ -21,6 +21,10 @@ std::vector<BookMetadata> LibraryIndexer::prepare_library(const std::string &dir
         }
 
         std::vector<std::streampos> index = process_file(file_path);
+        if (index.empty()){
+            std::cerr << std::format("[WARNING] No se pudo abrir/procesar el archivo: {} \n", file_path);
+            continue;
+        }
 
         library.emplace_back(file_path, std::move(index));
     }
@@ -29,14 +33,14 @@ std::vector<BookMetadata> LibraryIndexer::prepare_library(const std::string &dir
 }
 
 // Escanea el archivo e indexa la posición de inicio (byte) de cada línea
-std::vector<std::streampos> LibraryIndexer::process_file(const std::string &file_name) {
-    std::ifstream file(file_name);
+std::vector<std::streampos> LibraryIndexer::process_file(const std::string &file_path) {
     std::vector<std::streampos> file_line_index;
-    file_line_index.push_back(0); // index primera linea
+    std::ifstream file(file_path);
 
     if (!file)
-        throw std::runtime_error("No se pudo procesar el archivo"); // FIXME: NO LANZAR EXCEPCION AQUI, SIMPLEMENTE OMITIR
+        return file_line_index;
 
+    file_line_index.push_back(0); // index primera linea
     std::string line_text;
     while (std::getline(file, line_text)) {
         std::streampos position = file.tellg();
@@ -50,9 +54,9 @@ std::vector<std::streampos> LibraryIndexer::process_file(const std::string &file
 // Detecta si un archivo es binario buscando bytes nulos (\0) en los primeros
 // 8000 bytes, misma heurística que usa Git.
 // Ref: https://github.com/git/git/blob/master/xdiff-interface
-#define FIRST_BYTES 8000
-bool LibraryIndexer::is_binary(const std::string &file_name) {
-    std::ifstream f(file_name, std::ios::binary);
+constexpr int FIRST_BYTES = 8000;
+bool LibraryIndexer::is_binary(const std::string &file_path) {
+    std::ifstream f(file_path, std::ios::binary);
     char buffer[FIRST_BYTES];
     std::streamsize read_count = f.read(buffer, sizeof(buffer)).gcount();
     return std::memchr(buffer, '\0', read_count) != nullptr;
