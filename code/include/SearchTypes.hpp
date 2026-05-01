@@ -14,11 +14,11 @@
 #include <future>
 
 struct InternalSearchRequest {
-    SearchRequest Request;
-    std::promise<std::vector<BookResult>> request_prom{};
+    SearchRequest data;
+    std::promise<std::vector<BookResult>> promise{};
 
     std::future<std::vector<BookResult>> get_future() {
-        return request_prom.get_future();
+        return promise.get_future();
     }
 };
 struct BookMetadata {

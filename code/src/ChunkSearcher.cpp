@@ -38,6 +38,11 @@ void ChunkSearcher::read_file() {
     }
 
     fetch_next_chunk_word(file);
+
+    result.thread_id = thread_id;
+    result.start_line = start_line;
+    result.end_line = end_line;
+    result.occurrences = std::move(occurrences);
 }
 
 // Recupera la ultima palabra de la porcion anterior (de otro hilo)
@@ -79,7 +84,6 @@ void ChunkSearcher::store_occurrence(const std::string &line_text, size_t match_
     // Si no se ha encontrado palabra anterior, se recupera la ultima palabra de la linea anterior
     std::string previous = provisional_prev_word.empty() ? last_word : provisional_prev_word;
 
-    std::lock_guard<std::mutex> lock(searcher_mutex);
     occurrences.emplace_back(line_num, previous, next_word);
 }
 
@@ -87,13 +91,11 @@ void ChunkSearcher::store_occurrence(const std::string &line_text, size_t match_
 void ChunkSearcher::complete_pending_next_word(std::string &line_text) {
     if (is_next_word_pending()) {
         std::string initial_word = find_and_extract_word(line_text, 0, Direction::FORWARD);
-        std::lock_guard<std::mutex> lock(searcher_mutex);
         occurrences.back().set_next_word(initial_word);
     }
 }
 
 bool ChunkSearcher::is_next_word_pending() {
-    std::lock_guard<std::mutex> lock(searcher_mutex);
     return !occurrences.empty() && occurrences.back().get_next_word().empty();
 }
 

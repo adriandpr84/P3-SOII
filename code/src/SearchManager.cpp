@@ -19,6 +19,8 @@
 #include <unordered_set>
 
 #define DIRECTORY_PATH_BOOKS "libros"
+constexpr int N_SEARCH_SERVICE = 4;
+
 
 SearchManager::SearchManager() {
 
@@ -71,12 +73,14 @@ void SearchManager::init() {
 
     LibraryIndexer library_indexer;
     std::vector<BookMetadata> library = library_indexer.prepare_library(DIRECTORY_PATH_BOOKS);
+
+    searchers.reserve(N_SEARCH_SERVICE);
     
-    // TODO: Lanzar hilos SearchService y pasarles library
+    for (int i=0; i<N_SEARCH_SERVICE; i++){
+        searchers.emplace_back(SearchService(library, 0));
+    }
 
     is_running = true;
-
-
 }
 
 // ** El cliente debe invocar este método **
@@ -100,7 +104,15 @@ InternalSearchRequest SearchManager::get_search_petition() { // Bloqueante
 
 SearchManager::~SearchManager() {
 	// TODO: Implementar lógica
-	/*
+	
+    for (auto& searcher : searchers) {
+        searcher.join();
+    }
+    
+    
+    
+    /*
+    //TODO:
 	- Gestionar la finalizacion de hilos inferiores (SearchService).
 	- Se debe controlar que rompan su bucle y hacer su posterior join().
 	- Valorar más adelante si se deberian interrumpir todas las busquedas en curso o esperar a que finalicen.

@@ -32,7 +32,7 @@ class ChunkSearcher {
     std::string file_name;
     std::string target_word;
     std::vector<Occurrence> occurrences;
-    std::mutex &searcher_mutex;
+    ChunkResult& result;
 
     // Métodos
     void read_file();
@@ -53,9 +53,9 @@ class ChunkSearcher {
 
   public:
     ChunkSearcher(int _thread_id, int _start, int _end, std::streampos _start_byte, std::string _file_name,
-             std::string _target_word, std::mutex &_searcher_mutex)
+             std::string _target_word, ChunkResult& _result)
         : thread_id(_thread_id), start_line(_start), end_line(_end), start_line_byte(_start_byte),
-          file_name(_file_name), target_word(_target_word), searcher_mutex(_searcher_mutex) {}
+          file_name(_file_name), target_word(_target_word), result(_result) {}
     void operator()();
 
     // Getters

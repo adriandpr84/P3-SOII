@@ -11,16 +11,17 @@
 #pragma once
 
 #include "BookSearcher.hpp"
+#include "SearchTypes.hpp"
 #include <string>
 #include <vector>
 
 class SearchService {
   private:
-    const std::vector<std::string> book_paths;
+    const std::vector<BookMetadata> library;
     int thread_count;
 
   public:
-    SearchService(std::vector<std::string> _book_paths, int _thread_count)
-        : book_paths(_book_paths), thread_count(_thread_count) {}
+    SearchService(std::vector<BookMetadata> _library, int _thread_count)
+        : library(_library), thread_count(_thread_count) {}
     void operator()();
 };

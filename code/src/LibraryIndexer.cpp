@@ -35,7 +35,7 @@ std::vector<std::streampos> LibraryIndexer::process_file(const std::string &file
     file_line_index.push_back(0); // index primera linea
 
     if (!file)
-        throw std::runtime_error("No se pudo procesar el archivo");
+        throw std::runtime_error("No se pudo procesar el archivo"); // FIXME: NO LANZAR EXCEPCION AQUI, SIMPLEMENTE OMITIR
 
     std::string line_text;
     while (std::getline(file, line_text)) {

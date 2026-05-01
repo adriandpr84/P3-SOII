@@ -14,24 +14,24 @@
 #pragma once
 
 #include "ChunkSearcher.hpp"
+#include "SearchTypes.hpp"
+#include "SearchResultsTypes.hpp"
 #include <string>
 #include <vector>
 
 class BookSearcher {
   private:
-    std::string file_name;
+    BookMetadata book_metadata;
     std::string target_word;
     int thread_count;
     std::vector<ChunkSearcher> chunks;
+    BookResult& result;
 
     // Metodos privados
-    bool is_binary(const std::string &file_name);
-    std::vector<std::streampos> process_file(const std::string &file_name);
-    void create_searcher_threads(std::vector<std::streampos> file_line_index);
+    void create_searcher_threads();
 
   public:
-    BookSearcher(std::string _file_name, std::string _target_word, int _thread_count)
-    : file_name(std::move(_file_name)), target_word(std::move(_target_word)), thread_count(_thread_count) { }
+    BookSearcher(BookMetadata _metadata, std::string _target_word, BookResult& _result ,int _thread_count)
+    : book_metadata(std::move(_metadata)), target_word(std::move(_target_word)), result(_result), thread_count(_thread_count) { }
     void operator()();
-    std::vector<ChunkSearcher> get_results() const { return chunks; }
 };
