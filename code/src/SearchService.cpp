@@ -11,12 +11,15 @@
 #include "SearchManager.hpp"
 
 void SearchService::operator()() {
-	// TODO: Bucle principal de espera de peticiones
 	auto &manager = SearchManager::get_instance();
 
 	while (true) {
 
 		InternalSearchRequest request = manager.get_search_petition();
+		if (request.data.client_id == SHUTDOWN_REQUEST){
+			break;
+		}
+
 		std::vector<BookResult> results_per_book;
 		results_per_book.resize(library.size());
 

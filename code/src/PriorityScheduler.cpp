@@ -13,7 +13,7 @@
 PriorityScheduler::PriorityScheduler(std::vector<int> weights)
     : random_gen(std::random_device{}()), 
       priority_selector(weights.begin(), weights.end()), 
-      priority_queues(weights.size()) {}
+      priority_queues(weights.size()+1) {}
 
    
 void PriorityScheduler::push(InternalSearchRequest request, int queue_index) {
@@ -38,7 +38,8 @@ InternalSearchRequest PriorityScheduler::pop() {
 
 
 int PriorityScheduler::determine_queue_extraction() {
-	int n_queues = static_cast<int>(priority_queues.size());
+
+	int n_queues = static_cast<int>(priority_queues.size()-1);
 
 	//Extracción por starvation
     for (int i = 0; i < n_queues; ++i) {
@@ -56,8 +57,8 @@ int PriorityScheduler::determine_queue_extraction() {
             return current_idx;
         }
     }
-    
-    return 0;
+
+    return priority_queues.size() - 1; // Si se llega aqui, DEBE ser la cola de finalización
 }
 
 InternalSearchRequest PriorityScheduler::extract_from_queue(ManagedQueue& target_queue) {

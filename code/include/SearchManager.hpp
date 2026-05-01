@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <thread>
+#include <atomic>
 #include <unordered_map>
 #include "CommonTypes.hpp"       // SearchResult y SearchRequest
 #include "SearchTypes.hpp"       // InternalSearchRequest
@@ -48,7 +49,8 @@ private:
     std::unordered_map<ClientType, int> client_queue_map;
     std::vector<std::thread> searchers;
     std::unique_ptr<PriorityScheduler> scheduler_ptr;
-    bool is_running = false;
+    std::atomic<bool> is_running = false;
+    int idx_shutdown_queue;
 
     std::vector<int> build_and_validate_queues(const std::vector<PriorityEntry>& config);
 
