@@ -10,18 +10,21 @@
 
 #pragma once
 
-#include "BookSearcher.hpp"
 #include "SearchTypes.hpp"
 #include <string>
 #include <vector>
+#include <semaphore>
+#include <mutex>
 
+constexpr int MIN_CHUNK_SIZE = 2000;
 class SearchService {
   private:
     const std::vector<BookMetadata> library;
     int thread_count;
+    std::counting_semaphore<1024> chunks_resources;
 
   public:
     SearchService(std::vector<BookMetadata> _library, int _thread_count)
-        : library(_library), thread_count(_thread_count) {}
+        : library(std::move(_library)), thread_count(_thread_count), chunks_resources(_thread_count) {}
     void operator()();
 };

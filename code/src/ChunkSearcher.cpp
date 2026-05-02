@@ -43,6 +43,8 @@ void ChunkSearcher::read_file() {
     result.start_line = start_line;
     result.end_line = end_line;
     result.occurrences = std::move(occurrences);
+
+    chunk_resources_sem.release();
 }
 
 // Recupera la ultima palabra de la porcion anterior (de otro hilo)

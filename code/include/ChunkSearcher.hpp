@@ -14,10 +14,11 @@
 #pragma once
 
 #include "Occurrence.hpp"
+#include "SearchResultsTypes.hpp"
 #include <fstream>
-#include <mutex>
 #include <string>
 #include <vector>
+#include <semaphore>
 
 class ChunkSearcher {
 
@@ -33,6 +34,7 @@ class ChunkSearcher {
     std::string target_word;
     std::vector<Occurrence> occurrences;
     ChunkResult& result;
+    std::counting_semaphore<1024>& chunk_resources_sem;
 
     // Métodos
     void read_file();
@@ -53,9 +55,9 @@ class ChunkSearcher {
 
   public:
     ChunkSearcher(int _thread_id, int _start, int _end, std::streampos _start_byte, std::string _file_name,
-             std::string _target_word, ChunkResult& _result)
+             std::string _target_word, ChunkResult& _result, std::counting_semaphore<1024>& _chunk_resources_sem)
         : thread_id(_thread_id), start_line(_start), end_line(_end), start_line_byte(_start_byte),
-          file_name(_file_name), target_word(_target_word), result(_result) {}
+          file_name(_file_name), target_word(_target_word), result(_result), chunk_resources_sem(_chunk_resources_sem) {}
     void operator()();
 
     // Getters
