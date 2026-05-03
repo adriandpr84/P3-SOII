@@ -16,39 +16,47 @@
 #include <iostream>
 
 void ChunkSearcher::operator()() { 
-    read_file();
+    while (true) {
+        std::unique_lock<std::mutex> lock(task_queue_mtx);
+        cv_empty_queue.wait(lock, [this] { return !chunks_task_queue.empty(); });
+        
+        ChunkTask task = chunks_task_queue.front();
+        chunks_task_queue.pop();
+
+        lock.unlock(); 
+
+        task.result.thread_id = task.thread_id;
+        task.result.start_line = task.start_line;
+        task.result.end_line = task.end_line;
+
+        read_file(task);
+    }
+    
 }
 
 // Procesamiento de la parte de archivo que corresponda, orquestando la busqueda linea por linea.
-void ChunkSearcher::read_file() {
-    std::ifstream file(file_name);
+void ChunkSearcher::read_file(ChunkTask task) {
+    std::ifstream file(task.file_name);
     if (!file) {
-        std::cerr << std::format("[HILO {}] Error al abrir {}\n", thread_id, file_name);
+        std::cerr << std::format("[HILO {}] Error al abrir {}\n", task.thread_id, task.file_name);
         return;
     }
 
-    file.seekg(start_line_byte);
+    file.seekg(task.start_line_byte);
     std::string line_text;
-    std::string last_word = prepare_initial_context(file);
+    std::string last_word = prepare_initial_context(file, task.start_line);
 
-    for (int line_num = start_line; line_num <= end_line && std::getline(file, line_text); line_num++) {
+    for (int line_num = task.start_line; line_num <= task.end_line && std::getline(file, line_text); line_num++) {
         complete_pending_next_word(line_text);
-        process_line(line_text, line_num, last_word);
+        process_line(line_text, line_num, last_word, task.target_word);
         last_word = find_and_extract_word(line_text, (int)line_text.size(), Direction::BACKWARD);
     }
 
     fetch_next_chunk_word(file);
-
-    result.thread_id = thread_id;
-    result.start_line = start_line;
-    result.end_line = end_line;
-    result.occurrences = std::move(occurrences);
-
-    chunk_resources_sem.release();
 }
 
 // Recupera la ultima palabra de la porcion anterior (de otro hilo)
-std::string ChunkSearcher::prepare_initial_context(std::ifstream &file) {
+std::string ChunkSearcher::prepare_initial_context(std::ifstream &file, int start_line) {
     std::string line;
     if (start_line > 1 && std::getline(file, line)) {
         return find_and_extract_word(line, (int)line.size(), Direction::BACKWARD);
@@ -57,19 +65,19 @@ std::string ChunkSearcher::prepare_initial_context(std::ifstream &file) {
 }
 
 // Realiza la busqueda en una linea en concreto, usando los metodos auxiliares necesarios.
-void ChunkSearcher::process_line(std::string &line, int line_num, const std::string &previous_context) {
+void ChunkSearcher::process_line(std::string &line, int line_num, const std::string &previous_context, const std::string &target_word) {
     size_t pos = 0;
     while ((pos = line.find(target_word, pos)) != std::string::npos) {
         if (is_valid_match((int)pos, target_word, line)) {
-            store_occurrence(line, pos, line_num, previous_context);
+            store_occurrence(line, pos, line_num, previous_context, target_word, occurrence);
         }
         pos++;
     }
 }
 
 // Extrae la primera palabra de la siguiente porcion (de otro hilo) y guarda en ocurrencias
-void ChunkSearcher::fetch_next_chunk_word(std::ifstream &file) {
-    if (is_next_word_pending()) {
+void ChunkSearcher::fetch_next_chunk_word(std::ifstream &file, std::vector<Occurrence> occurences) {
+    if (is_next_word_pending(ocurrences)) {
         std::string extra_next_line;
         if (std::getline(file, extra_next_line)) {
             complete_pending_next_word(extra_next_line);
@@ -78,7 +86,7 @@ void ChunkSearcher::fetch_next_chunk_word(std::ifstream &file) {
 }
 
 void ChunkSearcher::store_occurrence(const std::string &line_text, size_t match_pos, int line_num,
-                                    const std::string &last_word) {
+                                    const std::string &last_word, const std::string &target_word, std::vector<Occurrence>& occurrences) {
 
     std::string provisional_prev_word = find_and_extract_word(line_text, match_pos - 1, Direction::BACKWARD);
     match_pos += target_word.length();
@@ -90,14 +98,14 @@ void ChunkSearcher::store_occurrence(const std::string &line_text, size_t match_
 }
 
 // Si no se encuentra palabra anterior en la linea se completará con la ultima palabra de la linea anterior
-void ChunkSearcher::complete_pending_next_word(std::string &line_text) {
-    if (is_next_word_pending()) {
+void ChunkSearcher::complete_pending_next_word(std::string &line_text, std::vector<Occurrence>& occurrences) {
+    if (is_next_word_pending(occurrences)) {
         std::string initial_word = find_and_extract_word(line_text, 0, Direction::FORWARD);
         occurrences.back().set_next_word(initial_word);
     }
 }
 
-bool ChunkSearcher::is_next_word_pending() {
+bool ChunkSearcher::is_next_word_pending(std::vector<Occurrence>& occurrences) {
     return !occurrences.empty() && occurrences.back().get_next_word().empty();
 }
 
@@ -129,7 +137,7 @@ std::string ChunkSearcher::find_and_extract_word(const std::string &line, int po
 }
 
 // Verifica que la coincidencia sea una palabra completa y no parte de otra (substring).
-bool ChunkSearcher::is_valid_match(int match_pos, std::string &target_word, std::string &line) {
+bool ChunkSearcher::is_valid_match(int match_pos, const std::string &target_word, std::string &line) {
     int lower_bound = match_pos - 1;
     int upper_bound = match_pos + target_word.length();
 
