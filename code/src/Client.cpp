@@ -7,3 +7,25 @@
  * * Revision : 
  * 
  */
+
+
+#include "Dictionary.hpp"
+
+Dictionary::Dictionary() {
+    
+    std::random_device rd;
+    rng = std::mt19937(rd());
+
+    words = {
+        "sistemas", "operativos", "concurrencia", "hilos", 
+        "procesos", "memoria", "mutex", "semaforo", "computador", "red"
+    };
+}
+
+std::string Dictionary::get_random_word() {
+    std::lock_guard<std::mutex> lock(dict_mutex);
+    if (words.empty()) return "";
+
+    std::uniform_int_distribution<int> dist(0, words.size() - 1);
+    return words[dist(rng)];
+}
