@@ -8,24 +8,21 @@
  * 
  */
 
+ #include "Client.hpp"
+#include "SearchManager.hpp"
+#include <iostream>
+#include <format>
+#include <fstream>
+#include <chrono>
 
-#include "Dictionary.hpp"
+Client::Client(int _id, ClientType _type, int _balance, std::string _target_word)
+    : id(_id), type(_type), balance(_balance), target_word(std::move(_target_word)) {}
 
-Dictionary::Dictionary() {
-    
-    std::random_device rd;
-    rng = std::mt19937(rd());
+void Client::operator()() {
 
-    words = {
-        "sistemas", "operativos", "concurrencia", "hilos", 
-        "procesos", "memoria", "mutex", "semaforo", "computador", "red"
-    };
-}
+    // Aqui va la empaquetacion de la peticion
 
-std::string Dictionary::get_random_word() {
-    std::lock_guard<std::mutex> lock(dict_mutex);
-    if (words.empty()) return "";
+    // Despues obtendria la instancia 
 
-    std::uniform_int_distribution<int> dist(0, words.size() - 1);
-    return words[dist(rng)];
+    // Y ya guardo lo resultados.
 }
