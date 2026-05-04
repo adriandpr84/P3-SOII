@@ -30,6 +30,7 @@ public:
 
     void push(InternalSearchRequest petition, int queue_index);
     InternalSearchRequest pop();
+    void push_shutdown(InternalSearchRequest shutdown_request);
 
 private:
 

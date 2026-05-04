@@ -73,10 +73,12 @@ void SearchManager::init() {
 	base_threads = std::min(base_threads, (unsigned int)MAX_ALLOWED_THREADS);
 	int n_threads_per_replica = std::max(1u, base_threads / N_SEARCH_SERVICE);
 
+	searchers_threads.reserve(N_SEARCH_SERVICE);
 	searchers.reserve(N_SEARCH_SERVICE);
 
 	for (int i = 0; i < N_SEARCH_SERVICE; i++) {
-		searchers.emplace_back(SearchService(library, n_threads_per_replica));
+		searchers.push_back(std::make_unique<SearchService>(library, n_threads_per_replica));
+		searchers_threads.emplace_back(std::ref(*searchers.back()));
 	}
 
 	is_running = true;
@@ -99,21 +101,20 @@ SearchResult SearchManager::execute_search(SearchRequest request) { // Bloqueant
 	return SearchResult{0.0, result};
 }
 
-InternalSearchRequest SearchManager::get_search_petition() { // Bloqueante
+InternalSearchRequest SearchManager::get_search_request() { // Bloqueante
 
 	return scheduler_ptr->pop();
 }
 
 SearchManager::~SearchManager() {
 	is_running = false;
-	int n_searchers = static_cast<int>(searchers.size());
+	int n_searchers = static_cast<int>(searchers_threads.size());
 
 	for (int i = 0; i < n_searchers; i++) {
-		InternalSearchRequest shudown_request;
-		scheduler_ptr->push(std::move(shudown_request), idx_shutdown_queue);
+		scheduler_ptr->push(InternalSearchRequest::create_shutdown_request(), idx_shutdown_queue);
 	}
 
-	for (auto &searcher : searchers) {
+	for (auto &searcher : searchers_threads) {
 		searcher.join();
 	}
 }
