@@ -19,10 +19,25 @@ Client::Client(int _id, ClientType _type, int _balance, std::string _target_word
     : id(_id), type(_type), balance(_balance), target_word(std::move(_target_word)) {}
 
 void Client::operator()() {
+    std::string type_str = (type == ClientType::FREE) ? "GRATUITO" : (type == ClientType::PREMIUM_UNLIMITED) ? "PREMIUM ILIMITADO" : "PREMIUM LIMITADO";
+                           
+    std::cout << std::format("[CLIENTE {}] Creado. Tipo: {}. Palabra: '{}'.\n", id, type_str, target_word);
 
-    // Aqui va la empaquetacion de la peticion
+    // Empaquetar la petición.
+    SearchRequest request;
+    request.client_id = id;
+    request.type = type;
+    request.target_word = target_word;
 
-    // Despues obtendria la instancia 
+    // Obtener la instancia del Singleton.
+    SearchResult result = SearchManager::get_instance().execute_search(request);
 
-    // Y ya guardo lo resultados.
+    // Guardar resultados.
+    save_results_to_file(result);
+
+    std::cout << std::format("[CLIENTE {}] Finalizado. Resultados guardados.\n", id);
+}
+
+void Client::save_results_to_file(const SearchResult& result) {
+    
 }

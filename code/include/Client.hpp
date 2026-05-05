@@ -23,7 +23,6 @@ private:
     ClientType type;
     int balance;
     std::string target_word;
-    SearchManager& search_manager;
 
     void save_results_to_file(const SearchResult& result, double elapsed_seconds);
 
