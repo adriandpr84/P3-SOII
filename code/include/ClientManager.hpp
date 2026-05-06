@@ -14,7 +14,6 @@
 
 class ClientManager {
 private:
-    SearchManager& search_manager;
     Dictionary dict;
     int total_clients;
     std::vector<std::thread> client_threads;
@@ -22,7 +21,7 @@ private:
     ClientType generate_random_type();
 
 public:
-    ClientManager(SearchManager& sm, int total_clients);
+    ClientManager(int total_clients);
     ~ClientManager();
 
     void start_simulation();
