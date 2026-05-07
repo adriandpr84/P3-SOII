@@ -26,6 +26,23 @@ ClientManager::~ClientManager() {
 
 ClientType ClientManager::generate_random_type() {
     
-    // Proporción aproximada: 20% Gratis, 80% Premium (repartido entre limitado e ilimitado)
-    // Lo voy ha hacer con una estructura de if-else.
+    int random_val = rand() % 100;
+    if (random_val < 20) {
+        return ClientType::FREE;
+    } else if (random_val < 60) {
+        return ClientType::PREMIUM_LIMITED;
+    } else {
+        return ClientType::PREMIUM_UNLIMITED;
+    }
+}
+
+void ClientManager::start_simulation() {
+
+    // Crear clientes en tandas
+
+    // Asignar los saldos iniciales dependiendo del tipo de cliente
+
+    // Inciar los hilos de los clientes
+
+    // Hacer pausa para simular la llegada de clientes 
 }
