@@ -10,14 +10,13 @@
 InternalSearchRequest create_dummy_request(int client_id) {
     SearchRequest req;
     req.client_id = client_id;
-    InternalSearchRequest internal_req;
-    internal_req.data = req;
+    InternalSearchRequest internal_req(req);
     return internal_req; 
 }
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        std::cerr << "Uso: " << argv[0] << " [FIFO|FALLBACK|RATIO|STRESS|STARVATION]\n";
+        std::cerr << "Uso: " << argv[0] << " [FIFO|FALLBACK|RATIO|CONCURRENCY|STARVATION]\n";
         return 1;
     }
 

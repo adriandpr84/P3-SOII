@@ -34,11 +34,12 @@ public:
 
     ~SearchManager();
 
-    void init();
+    void init(std::string path_books);
+    void shutdown();
 
     SearchResult execute_search(SearchRequest request);
 
-    InternalSearchRequest get_search_petition();
+    InternalSearchRequest get_search_request();
 
     // Prevención de copias y asignaciones
     SearchManager(const SearchManager&) = delete;
@@ -47,7 +48,8 @@ public:
 private:
 
     std::unordered_map<ClientType, int> client_queue_map;
-    std::vector<std::thread> searchers;
+    std::vector<std::thread> searchers_threads;
+    std::vector<std::unique_ptr<SearchService>> searchers;
     std::unique_ptr<PriorityScheduler> scheduler_ptr;
     std::atomic<bool> is_running = false;
     int idx_shutdown_queue;

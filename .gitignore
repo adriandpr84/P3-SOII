@@ -42,4 +42,6 @@ code/tests/build/
 # Conservar tests
 !code/tests/CMakeLists.txt
 !code/tests/test_priority_scheduler.cpp
+!code/tests/test_priority_scheduler.cpp
+
 

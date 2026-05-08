@@ -15,6 +15,7 @@
 #include "Occurrence.hpp"
 
 struct ChunkResult {
+    std::string error_msg = "";
     int thread_id;
     int start_line;
     int end_line;
