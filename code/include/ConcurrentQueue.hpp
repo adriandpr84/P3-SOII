@@ -1,3 +1,14 @@
+/**
+ * Project      : Practica 3 de Sistemas Operativos II
+ * Program      : ConcurrentQueue.hpp
+ * Author       : Adrián Díaz-Plaza Remesal
+ * Date created : 30/04/2026
+ * Purpose      : //TODO descripcion
+ * Revision     :
+ *
+ */
+
+
 #pragma once
 #include <condition_variable>
 #include <mutex>

@@ -34,7 +34,8 @@ public:
 
     ~SearchManager();
 
-    void init();
+    void init(std::string path_books);
+    void shutdown();
 
     SearchResult execute_search(SearchRequest request);
 

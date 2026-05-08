@@ -8,6 +8,10 @@
 std::vector<BookMetadata> LibraryIndexer::prepare_library(const std::string &directory_path) {
 
     std::vector<BookMetadata> library;
+
+    if (!std::filesystem::exists(directory_path)){
+        throw std::invalid_argument("[ERROR] No existe el directorio.");
+    }
     
     for (const auto &entry : std::filesystem::directory_iterator(directory_path)) {
         if (!entry.is_regular_file())
@@ -22,7 +26,7 @@ std::vector<BookMetadata> LibraryIndexer::prepare_library(const std::string &dir
 
         std::vector<std::streampos> index = process_file(file_path);
         if (index.empty()){
-            std::cerr << std::format("[WARNING] No se pudo abrir/procesar el archivo: {} \n", file_path);
+            std::cerr << std::format("[WARNING] Omitiendo el archivo: {}. No se pudo abrir/procesar. \n", file_path);
             continue;
         }
 

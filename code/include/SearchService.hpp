@@ -37,6 +37,8 @@ class SearchService {
     std::vector<BookResult> build_results(const std::vector<int> &chunks_per_book,
                                           std::vector<std::future<ChunkResult>> &chunks_futures);
 
+    void stop_workers();
+
   public:
     SearchService(std::vector<BookMetadata> _library, int _thread_count)
         : library(std::move(_library)), thread_count(_thread_count) {}

@@ -19,13 +19,22 @@
 
 void ChunkSearcher::operator()() {
 	while (true) {
-        ChunkTask task = task_queue.pop();
+		ChunkTask task = task_queue.pop();
 
-        if (task.is_shutdown())
-            break;
+		if (task.is_shutdown())
+			break;
+		try {
+			ChunkResult result = read_file(task);
+			task.promise.set_value(std::move(result));
+		} catch (const std::exception &e) {
+			ChunkResult error_result;
+			error_result.thread_id = task.thread_id;
+			error_result.start_line = task.start_line;
+			error_result.end_line = task.end_line;
+			error_result.error_msg = e.what();
 
-		ChunkResult result = read_file(task);
-		task.promise.set_value(std::move(result));
+			task.promise.set_value(std::move(error_result));
+		}
 	}
 }
 
@@ -38,8 +47,7 @@ ChunkResult ChunkSearcher::read_file(const ChunkTask &task) {
 
 	std::ifstream file(task.file_name);
 	if (!file) {
-		std::cerr << std::format("[HILO {}] Error al abrir {}\n", task.thread_id, task.file_name);
-		throw std::runtime_error("No se pudo abrir el archivo");
+		throw(std::format("No se pudo abrir el libro"));
 	}
 
 	file.seekg(task.start_line_byte);
