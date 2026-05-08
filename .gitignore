@@ -11,13 +11,6 @@ code/bin/
 *.lib
 *.dll
 
-# --- Archivos de Prueba y Dummies ---
-# Cualquier archivo que empiece por dummy_ será ignorado
-**/dummy_*
-# Ignora logs y resultados de ejecuciones
-results_*.txt
-*.log
-
 # --- Archivos temporales de Editores ---
 *~
 *.swp
@@ -41,7 +34,7 @@ code/tests/build/
 
 # Conservar tests
 !code/tests/CMakeLists.txt
-!code/tests/test_priority_scheduler.cpp
-!code/tests/test_priority_scheduler.cpp
+!code/tests/*.cpp
+
 
 

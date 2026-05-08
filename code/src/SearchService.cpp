@@ -83,26 +83,24 @@ std::vector<BookResult> SearchService::build_results(const std::vector<int> &chu
 	result.reserve(library.size());
 
 	int future_idx = 0;
-	bool search_cancelled = false;
 
 	for (size_t book_idx = 0; book_idx < library.size(); book_idx++) {
-
-
 		BookResult book_result;
 		book_result.chunks.reserve(chunks_per_book[book_idx]);
 		result.push_back(std::move(book_result));
 		result.back().book_name = library[book_idx].path;
 
 		for (int n_chunk = 0; n_chunk < chunks_per_book[book_idx]; n_chunk++) {
-            result.back().chunks.push_back(chunks_futures[future_idx++].get());
-        }
+			result.back().chunks.push_back(chunks_futures[future_idx++].get());
+		}
 	}
 
 	return result;
 }
 
 void SearchService::stop_workers() {
-    if (chunk_threads.empty()) return;
+	if (chunk_threads.empty())
+		return;
 
 	int n_chunks_threads = static_cast<int>(chunk_threads.size());
 
@@ -113,7 +111,7 @@ void SearchService::stop_workers() {
 		if (chunk.joinable())
 			chunk.join();
 
-    chunk_threads.clear();
+	chunk_threads.clear();
 }
 
 SearchService::~SearchService() { stop_workers(); }

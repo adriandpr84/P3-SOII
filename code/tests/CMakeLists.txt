@@ -26,7 +26,7 @@ add_test(NAME Scheduler_Concurrency      COMMAND test_scheduler CONCURRENCY)
 add_test(NAME Scheduler_Starvation      COMMAND test_scheduler STARVATION)
 
 
-add_executable(test_integration 
+add_executable(test_search_engine 
     test_search_engine.cpp 
     ../src/SearchManager.cpp
     ../src/SearchService.cpp
@@ -34,13 +34,13 @@ add_executable(test_integration
     ../src/LibraryIndexer.cpp
     ../src/PriorityScheduler.cpp
 )
-target_link_libraries(test_integration PRIVATE Threads::Threads)
+target_link_libraries(test_search_engine PRIVATE Threads::Threads)
 
 
-add_test(NAME Engine_Concurrency COMMAND test_integration concurrency)
+add_test(NAME Engine_Concurrency COMMAND test_search_engine concurrency)
 
 
-add_test(NAME Engine_Shutdown_Race COMMAND test_integration shutdown)
+add_test(NAME Engine_Shutdown_Race_Condition COMMAND test_search_engine shutdown)
 
 
-set_tests_properties(Engine_Shutdown_Race PROPERTIES TIMEOUT 15)
+set_tests_properties(Engine_Shutdown_Race PROPERTIES TIMEOUT 10)
