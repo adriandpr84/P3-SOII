@@ -14,6 +14,7 @@
 #include <vector>
 #include <thread>
 #include <atomic>
+#include <shared_mutex>
 #include <unordered_map>
 #include "CommonTypes.hpp"       // SearchResult y SearchRequest
 #include "SearchTypes.hpp"       // InternalSearchRequest
@@ -34,7 +35,7 @@ public:
 
     ~SearchManager();
 
-    void init(std::string path_books);
+    void init(std::string path_books, const std::vector<PriorityEntry>& priority_config);
     void shutdown();
 
     SearchResult execute_search(SearchRequest request);
@@ -51,7 +52,8 @@ private:
     std::vector<std::thread> searchers_threads;
     std::vector<std::unique_ptr<SearchService>> searchers;
     std::unique_ptr<PriorityScheduler> scheduler_ptr;
-    std::atomic<bool> is_running = false;
+    bool is_running = false;
+    std::shared_mutex manager_mtx;
     int idx_shutdown_queue;
 
     std::vector<int> build_and_validate_queues(const std::vector<PriorityEntry>& config);

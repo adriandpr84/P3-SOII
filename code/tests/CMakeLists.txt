@@ -43,4 +43,4 @@ add_test(NAME Engine_Concurrency COMMAND test_search_engine concurrency)
 add_test(NAME Engine_Shutdown_Race_Condition COMMAND test_search_engine shutdown)
 
 
-set_tests_properties(Engine_Shutdown_Race PROPERTIES TIMEOUT 10)
+set_tests_properties(Engine_Shutdown_Race_Condition PROPERTIES TIMEOUT 10)

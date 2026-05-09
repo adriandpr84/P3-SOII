@@ -11,6 +11,8 @@
 
 namespace fs = std::filesystem;
 const std::string TEST_PATH = "test_books_dir";
+const std::vector<PriorityEntry> priority_config = {{80, {ClientType::PREMIUM_LIMITED, ClientType::PREMIUM_UNLIMITED}},
+	                                              {20, {ClientType::FREE}}};
 
 void setup_library(int num_books, int lines_per_book, int words_per_line) {
     if (fs::exists(TEST_PATH)) fs::remove_all(TEST_PATH);
@@ -39,7 +41,8 @@ int run_test_concurrency() {
     constexpr int NUM_REQUESTS = 50;
 
     auto &manager = SearchManager::get_instance();
-    manager.init(TEST_PATH);
+	
+    manager.init(TEST_PATH, priority_config);
 
     std::atomic<int> success{0};
     std::vector<std::thread> clients;
@@ -73,7 +76,7 @@ int run_test_concurrency() {
 int run_test_shutdown() {
     setup_library(1, 100, 4);
     auto &manager = SearchManager::get_instance();
-    manager.init(TEST_PATH);
+    manager.init(TEST_PATH, priority_config);
 
     std::atomic<bool> keep_going{true};
     const int NUM_ATTACKERS = 50; 

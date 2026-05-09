@@ -15,21 +15,9 @@
 constexpr int FACTOR = 2;
 constexpr int N_SEARCH_SERVICE = 4;
 constexpr int MAX_ALLOWED_THREADS =
-    1024; // NO mas de 1024, cada thread abre un archivo. El número maximo de descriptores por proceso es 1024.
+    1000; // NO mas de 1024, cada thread abre un archivo. El número maximo de descriptores por proceso es 1024.
 
-SearchManager::SearchManager() {
-
-	/// --- Definición de prioridades --- ///
-	std::vector<PriorityEntry> priority_config = {{80, {ClientType::PREMIUM_LIMITED, ClientType::PREMIUM_UNLIMITED}},
-	                                              {20, {ClientType::FREE}}};
-	/// --------------------------------- ///
-
-	std::vector<int> extracted_weights = build_and_validate_queues(priority_config);
-
-	idx_shutdown_queue = extracted_weights.size();
-
-	scheduler_ptr = std::make_unique<PriorityScheduler>(extracted_weights);
-}
+SearchManager::SearchManager() {}
 
 std::vector<int> SearchManager::build_and_validate_queues(const std::vector<PriorityEntry> &config) {
 	std::vector<int> extracted_weights;
@@ -44,28 +32,36 @@ std::vector<int> SearchManager::build_and_validate_queues(const std::vector<Prio
 		for (const auto &client : client_types) {
 			client_queue_map.emplace(client, actual_queue_index);
 			if (!types_proccessed.emplace(client).second) {
-				throw std::runtime_error("[SEARCH MANAGER] Error: ClientType duplicado.");
+				throw std::invalid_argument("[SEARCH MANAGER] Error: ClientType duplicado.");
 			}
 		}
 		actual_queue_index++;
 	}
 
 	if (total_weight != 100) {
-		throw std::runtime_error("[SEARCH MANAGER] Error: Las prioridades deben sumar 100.");
+		throw std::invalid_argument("[SEARCH MANAGER] Error: Las prioridades deben sumar 100.");
 	}
 
 	if (types_proccessed.size() != static_cast<size_t>(ClientType::COUNT)) {
-		throw std::runtime_error("[SEARCH MANAGER] Error: No se han configurado todos los tipos de cliente.");
+		throw std::invalid_argument("[SEARCH MANAGER] Error: No se han configurado todos los tipos de cliente.");
 	}
 
 	return extracted_weights;
 }
 
 // ** Inicializacion del motor de busqueda, debe ser invocado en el hilo principal **
-void SearchManager::init(std::string path_books) {
+void SearchManager::init(std::string path_books, const std::vector<PriorityEntry> &priority_config) {
+
+	std::unique_lock<std::shared_mutex> lock(manager_mtx);
 	if (is_running)
 		return;
 
+	// Iniciar scheduler
+	std::vector<int> extracted_weights = build_and_validate_queues(priority_config);
+	idx_shutdown_queue = extracted_weights.size();
+	scheduler_ptr = std::make_unique<PriorityScheduler>(extracted_weights);
+
+	// Indexar libros
 	LibraryIndexer library_indexer;
 	std::vector<BookMetadata> library;
 	try {
@@ -74,6 +70,7 @@ void SearchManager::init(std::string path_books) {
 		throw std::runtime_error(std::format("[SEARCH MANAGER] Error al indexar los libros: {}", e.what()));
 	}
 
+	// Lanzar workers
 	unsigned int cores = std::thread::hardware_concurrency() * FACTOR;
 	unsigned int base_threads = (cores != 0) ? cores : N_SEARCH_SERVICE;
 	base_threads = std::min(base_threads, (unsigned int)MAX_ALLOWED_THREADS);
@@ -91,11 +88,7 @@ void SearchManager::init(std::string path_books) {
 }
 
 // ** El cliente debe invocar este método **
-//////// FIXME: AREGLAR DEADLOCK!!
 SearchResult SearchManager::execute_search(SearchRequest request) { // Bloqueante
-	if (!is_running) {
-		throw std::runtime_error("[SEARCH MANAGER] El motor de busqueda no acepta peticiones.");
-	}
 
 	if (request.target_word.empty()) {
 		throw std::invalid_argument("[SEARCH MANAGER] Error: La palabra a buscar no puede estar vacía.");
@@ -105,25 +98,26 @@ SearchResult SearchManager::execute_search(SearchRequest request) { // Bloqueant
 		throw std::invalid_argument("[SEARCH MANAGER] Error: El ID de cliente no puede ser negativo.");
 	}
 
-	//------------------------------------------------------------
-	std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Se puso unicamente para provocar fallo en el test de shutdown. TODO: Arreglar deadlock
-	//-----------------------------------------------------------
-
-
 	auto start_time = std::chrono::high_resolution_clock::now();
 
 	InternalSearchRequest internal_request(request);
 	std::future request_future = internal_request.get_future();
-
 	int queue_index = client_queue_map.at(request.type);
-	scheduler_ptr->push(std::move(internal_request), queue_index);
 
-	std::vector<BookResult> result;
-	try {
-		result = request_future.get();
-	} catch (...) {
-		throw std::runtime_error("[SEARCH MANAGER] Error en la busqueda");
+	{
+		std::shared_lock<std::shared_mutex> lock(manager_mtx);
+		if (!is_running) {
+			throw std::runtime_error("[SEARCH MANAGER] El motor de busqueda no acepta peticiones.");
+		}
+		scheduler_ptr->push(std::move(internal_request), queue_index);
 	}
+
+	//------------------------------------------------------------
+	std::this_thread::sleep_for(
+	    std::chrono::milliseconds(100)); // Se puso unicamente para provocar fallo en el test de shutdown
+	//-----------------------------------------------------------
+
+	std::vector<BookResult> result = request_future.get();
 
 	auto end_time = std::chrono::high_resolution_clock::now();
 	std::chrono::duration<double, std::milli> elapsed = end_time - start_time;
@@ -135,12 +129,13 @@ InternalSearchRequest SearchManager::get_search_request() { // Bloqueante
 	return scheduler_ptr->pop();
 }
 
-//////// FIXME: AREGLAR DEADLOCK!!
 void SearchManager::shutdown() {
+
+	std::unique_lock<std::shared_mutex> lock(manager_mtx);
 	if (!is_running)
 		return;
-
 	is_running = false;
+
 	int n_searchers = static_cast<int>(searchers_threads.size());
 
 	for (int i = 0; i < n_searchers; i++)
