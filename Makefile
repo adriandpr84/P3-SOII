@@ -4,6 +4,8 @@ CXXFLAGS := -Wall -Wextra -Werror -std=c++20 -pthread -g -Icode/include
 SRC_DIR := code/src
 OBJ_DIR := code/obj
 BIN_DIR := code/bin
+TEST_DIR = code/tests
+BUILD_DIR = $(TEST_DIR)/build
 TARGET  := $(BIN_DIR)/SSOOIIGLE
 
 
@@ -28,9 +30,19 @@ $(BIN_DIR):
 run: all
 	./$(TARGET)
 
-clean:
+clean: clean-test
 	rm -rf $(OBJ_DIR) $(BIN_DIR)
 
 re: clean all
 
-.PHONY: all clean run re
+test:
+	@mkdir -p $(BUILD_DIR)
+	@cd $(BUILD_DIR) && cmake .. > /dev/null
+	@$(MAKE) -C $(BUILD_DIR)
+	@cd $(BUILD_DIR) && ctest --output-on-failure
+
+clean-test:
+	@rm -rf $(BUILD_DIR)
+
+
+.PHONY: all clean run re test clean-test
