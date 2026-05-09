@@ -47,7 +47,7 @@ ChunkResult ChunkSearcher::read_file(const ChunkTask &task) {
 
 	std::ifstream file(task.file_name);
 	if (!file) {
-		throw(std::format("No se pudo abrir el libro"));
+		throw std::runtime_error(std::format("No se pudo abrir el libro"));
 	}
 
 	file.seekg(task.start_line_byte);

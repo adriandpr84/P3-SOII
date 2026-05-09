@@ -14,6 +14,7 @@
 #include <future>
 
 constexpr int SHUTDOWN = -33;
+constexpr int LINES_PER_CHUNK = 2000;
 
 struct InternalSearchRequest {
 	SearchRequest data;
@@ -33,7 +34,14 @@ struct InternalSearchRequest {
 
 struct BookMetadata {
 	std::string path;
-	std::vector<std::streampos> line_index;
+	std::vector<ChunkMetadata> line_index;
+};
+
+struct ChunkMetadata {
+	int start_line;
+	int end_line;
+	std::streampos start_line_byte;
+	bool last_chunk = false;
 };
 
 struct ChunkTask {

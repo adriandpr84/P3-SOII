@@ -14,8 +14,7 @@
 
 constexpr int FACTOR = 2;
 constexpr int N_SEARCH_SERVICE = 4;
-constexpr int MAX_ALLOWED_THREADS =
-    1000; // NO mas de 1024, cada thread abre un archivo. El número maximo de descriptores por proceso es 1024.
+constexpr int MAX_ALLOWED_THREADS = 1000;
 
 SearchManager::SearchManager() {}
 
@@ -111,11 +110,6 @@ SearchResult SearchManager::execute_search(SearchRequest request) { // Bloqueant
 		}
 		scheduler_ptr->push(std::move(internal_request), queue_index);
 	}
-
-	//------------------------------------------------------------
-	std::this_thread::sleep_for(
-	    std::chrono::milliseconds(100)); // Se puso unicamente para provocar fallo en el test de shutdown
-	//-----------------------------------------------------------
 
 	std::vector<BookResult> result = request_future.get();
 

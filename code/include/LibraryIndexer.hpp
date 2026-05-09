@@ -25,5 +25,5 @@ public:
 
 private:
     bool is_binary(const std::string& file_name);
-    std::vector<std::streampos> process_file(const std::string& file_name);
+    std::vector<ChunkMetadata> process_file(const std::string& file_name);
 };
