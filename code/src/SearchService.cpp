@@ -57,7 +57,6 @@ void SearchService::produce_tasks(const std::string &target_word,
 
 	for (auto &book_metadata : library) {
 		int thread_id = 0;
-		int n_chunks = static_cast<int>(book_metadata.line_index.size());
 
 		for (auto &chunk : book_metadata.line_index) {
 			ChunkTask task(++thread_id, chunk.start_line, chunk.end_line, chunk.start_line_byte, book_metadata.path,

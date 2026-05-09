@@ -29,7 +29,7 @@ std::vector<int> SearchManager::build_and_validate_queues(const std::vector<Prio
 		total_weight += priority;
 
 		for (const auto &client : client_types) {
-			client_queue_map.emplace(client, actual_queue_index);
+			client_queue_map[static_cast<size_t>(client)] = actual_queue_index;
 			if (!types_proccessed.emplace(client).second) {
 				throw std::invalid_argument("[SEARCH MANAGER] Error: ClientType duplicado.");
 			}
@@ -101,7 +101,7 @@ SearchResult SearchManager::execute_search(SearchRequest request) { // Bloqueant
 
 	InternalSearchRequest internal_request(request);
 	std::future request_future = internal_request.get_future();
-	int queue_index = client_queue_map.at(request.type);
+	int queue_index = client_queue_map[static_cast<size_t>(request.type)];
 
 	{
 		std::shared_lock<std::shared_mutex> lock(manager_mtx);

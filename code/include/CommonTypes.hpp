@@ -21,5 +21,6 @@ struct SearchRequest {
     int client_id;
     ClientType type;
     std::string target_word;
+    int balance;
 };
 

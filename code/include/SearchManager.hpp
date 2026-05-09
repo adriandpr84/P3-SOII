@@ -12,10 +12,10 @@
 
 #include <string>
 #include <vector>
+#include <array>
 #include <thread>
 #include <atomic>
 #include <shared_mutex>
-#include <unordered_map>
 #include "CommonTypes.hpp"       // SearchResult y SearchRequest
 #include "SearchTypes.hpp"       // InternalSearchRequest
 #include "SearchService.hpp"
@@ -48,7 +48,7 @@ public:
 
 private:
 
-    std::unordered_map<ClientType, int> client_queue_map;
+    std::array<int, static_cast<size_t>(ClientType::COUNT)> client_queue_map;
     std::vector<std::thread> searchers_threads;
     std::vector<std::unique_ptr<SearchService>> searchers;
     std::unique_ptr<PriorityScheduler> scheduler_ptr;

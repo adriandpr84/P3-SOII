@@ -25,16 +25,11 @@ struct InternalSearchRequest {
 	std::future<std::vector<BookResult>> get_future() { return promise.get_future(); }
 
 	static InternalSearchRequest create_shutdown_request() {
-		SearchRequest request = {SHUTDOWN, ClientType::FREE, ""};
+		SearchRequest request = {SHUTDOWN, ClientType::FREE, "", 0};
 		return InternalSearchRequest(std::move(request));
 	}
 
 	bool is_shutdown() const { return data.client_id == SHUTDOWN; }
-};
-
-struct BookMetadata {
-	std::string path;
-	std::vector<ChunkMetadata> line_index;
 };
 
 struct ChunkMetadata {
@@ -42,6 +37,11 @@ struct ChunkMetadata {
 	int end_line;
 	std::streampos start_line_byte;
 	bool last_chunk = false;
+};
+
+struct BookMetadata {
+	std::string path;
+	std::vector<ChunkMetadata> line_index;
 };
 
 struct ChunkTask {
@@ -57,9 +57,7 @@ struct ChunkTask {
 	    : thread_id(id), start_line(start), end_line(end), start_line_byte(byte), file_name(std::move(file)),
 	      target_word(std::move(word)) {}
 
-	static ChunkTask create_shutdown_task() {
-        return ChunkTask(SHUTDOWN, 0, 0, 0, "", "");
-    }
+	static ChunkTask create_shutdown_task() { return ChunkTask(SHUTDOWN, 0, 0, 0, "", ""); }
 
 	bool is_shutdown() const { return thread_id == SHUTDOWN; }
 

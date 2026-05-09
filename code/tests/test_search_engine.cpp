@@ -56,7 +56,7 @@ int run_test_concurrency() {
                     
                     int client_id = (i * 100) + j; 
 
-                    auto res = manager.execute_search({client_id, type, "PalabraObjetivo"});
+                    auto res = manager.execute_search({client_id, type, "PalabraObjetivo", 0});
                     
                     if (!res.results_per_book.empty()) {
                         success++;
@@ -86,7 +86,7 @@ int run_test_shutdown() {
         attackers.emplace_back([&, i]() {
             while (keep_going) {
                 try {
-                    manager.execute_search({2000 + i, ClientType::PREMIUM_UNLIMITED, "PalabraObjetivo"});
+                    manager.execute_search({2000 + i, ClientType::PREMIUM_UNLIMITED, "PalabraObjetivo", 0});
                 } catch (...) {
                 }
             }
