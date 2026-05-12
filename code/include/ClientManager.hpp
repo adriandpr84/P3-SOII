@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "SearchManager.hpp"
+#include "CommonTypes.hpp"
 #include "Dictionary.hpp"
 #include <vector>
 #include <thread>
