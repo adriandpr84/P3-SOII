@@ -8,14 +8,7 @@
 #pragma once
 
 #include <string>
-#include <vector>
-#include "SearchManager.hpp"
-
-enum class ClientType {
-    FREE,
-    PREMIUM_LIMITED,
-    PREMIUM_UNLIMITED
-};
+#include "CommonTypes.hpp"
 
 class Client {
 private:
@@ -24,10 +17,10 @@ private:
     int balance;
     std::string target_word;
 
-    void save_results_to_file(const SearchResult& result, double elapsed_seconds);
+    void save_results_to_file(const SearchResult& result);
 
 public:
-    Client(int id, ClientType type, int balance, std::string target_word, SearchManager& sm);
+    Client(int _id, ClientType _type, int _balance, std::string _target_word);
     
     void operator()();
 };

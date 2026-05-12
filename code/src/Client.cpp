@@ -11,7 +11,6 @@
 #include <iostream>
 #include <format>
 #include <fstream>
-#include <chrono>
 
 Client::Client(int _id, ClientType _type, int _balance, std::string _target_word)
     : id(_id), type(_type), balance(_balance), target_word(std::move(_target_word)) {}
@@ -26,6 +25,7 @@ void Client::operator()() {
     request.client_id = id;
     request.type = type;
     request.target_word = target_word;
+    request.balance = balance;
 
     // Obtener la instancia del Singleton.
     SearchResult result = SearchManager::get_instance().execute_search(request);
@@ -33,7 +33,7 @@ void Client::operator()() {
     // Guardar resultados.
     save_results_to_file(result);
 
-    std::cout << std::format("[CLIENTE {}] Finalizado. Resultados guardados.\n", id);
+    std::cout << std::format("[CLIENTE {}] Finalizado en {:.2f} ms. Resultados guardados.\n", id, result.total_time);
 }
 
 void Client::save_results_to_file(const SearchResult& result) {
@@ -47,13 +47,19 @@ void Client::save_results_to_file(const SearchResult& result) {
 
     file << std::format("=== Resultados de Búsqueda para Cliente {} ===\n", id);
     file << std::format("Palabra buscada: {}\n", target_word);
-    file << std::format("Tiempo total de búsqueda: {:.4f} segundos\n", result.total_time);
+    file << std::format("Tiempo total de búsqueda: {:.2f} milisegundos\n", result.total_time);
     file << "---------------------------------------------------\n\n";
 
     for (const auto& book : result.results_per_book) {
         file << std::format(">> Libro: {}\n", book.book_name);
         
         for (const auto& chunk : book.chunks) {
+            
+            if (!chunk.error_msg.empty()) {
+                file << std::format("  [Hilo {}] ERROR en este bloque: {}\n", chunk.thread_id, chunk.error_msg);
+                continue; 
+            }
+
             for (const auto& occurrence : chunk.occurrences) {
                 file << std::format("  [Hilo {} | Línea {}] ... {} **{}** {} ...\n", 
                     chunk.thread_id, 
