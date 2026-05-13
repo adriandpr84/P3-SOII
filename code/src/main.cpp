@@ -7,11 +7,14 @@
 
 #include "SearchManager.hpp"
 #include "ClientManager.hpp"
-#include "PaymentSystem.hpp"
+#include "PaymentProxy.hpp"
+#include "PaymentProcess.hpp"
 #include "CommonTypes.hpp"
 #include <iostream>
 #include <string>
 #include <vector>
+#include <unistd.h>
+#include <sys/wait.h>
 
 int main(int argc, char* argv[]) {
 
