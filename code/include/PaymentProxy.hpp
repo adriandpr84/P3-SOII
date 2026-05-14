@@ -1,5 +1,6 @@
 /**
  * Project      : Practica 3 de Sistemas Operativos II
+ * Author       : Manuel Martín-Tembleque García-Serrano.
  * Program      : PaymentProxy.hpp
  * Purpose      : Interfaz en el Proceso Padre para comunicarse con el Proceso Hijo de pagos.
  */

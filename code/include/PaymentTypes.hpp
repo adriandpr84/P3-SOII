@@ -1,5 +1,6 @@
 /**
  * Project      : Practica 3 de Sistemas Operativos II
+ * Author       : Manuel Martín-Tembleque García-Serrano.
  * Program      : PaymentTypes.hpp
  * Purpose      : Define la estructura del mensaje para la cola System V (msgget).
  */
