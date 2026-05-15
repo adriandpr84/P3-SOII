@@ -4,14 +4,10 @@
  * Author       : Adrián Díaz-Plaza Remesal
  * Date created : 02/03/2026
  * Purpose      : Archivo de cabecera de la clase Occurrence que almacena las coincidencias del texto
- * Revision     :
- * 02/03/2026 - Adrián - Creación de la estructura de la clase Occurrence según lo definido en clase 
- * Desde el 16/03/2026 hasta el 27/03/2026 se han ido añadiendo getters y setters según se han ido requiriendo.
  */
 
 
-#ifndef OCCURRENCE_HPP
-#define OCCURRENCE_HPP
+#pragma once
 
 #include <string>
 
@@ -30,5 +26,3 @@ class Occurrence {
     const std::string &get_next_word() const { return next_word; }
     void set_next_word(std::string word) { next_word = std::move(word); }
 };
-
-#endif
