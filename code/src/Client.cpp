@@ -6,7 +6,7 @@
  *                Ejecutará la petición bloqueándose a la espera de resultados y, al finalizar, calculará el tiempo total y guardará los resultados en un archivo privado.
  */
 
- #include "Client.hpp"
+#include "Client.hpp"
 #include "SearchManager.hpp"
 #include <iostream>
 #include <format>
@@ -28,7 +28,14 @@ void Client::operator()() {
     request.balance = balance;
 
     // Obtener la instancia del Singleton.
-    SearchResult result = SearchManager::get_instance().execute_search(request);
+    SearchResult result;
+    try{
+        result = SearchManager::get_instance().execute_search(request);
+    }catch(const std::exception &e){
+        std::cerr << "No se pudo mandar la peticion\n";
+        return;
+    }
+    
 
     // Guardar resultados.
     save_results_to_file(result);
@@ -37,7 +44,7 @@ void Client::operator()() {
 }
 
 void Client::save_results_to_file(const SearchResult& result) {
-    std::string filename = std::format("resultados_cliente_{}.txt", id);
+    std::string filename = std::format("simulation_results/resultados_cliente_{}.txt", id);
     std::ofstream file(filename);
 
     if (!file.is_open()) {

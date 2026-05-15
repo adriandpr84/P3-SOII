@@ -18,6 +18,7 @@ private:
     std::string target_word;
 
     void save_results_to_file(const SearchResult& result);
+    
 
 public:
     Client(int _id, ClientType _type, int _balance, std::string _target_word);

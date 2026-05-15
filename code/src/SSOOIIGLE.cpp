@@ -10,6 +10,7 @@
 #include "PaymentProxy.hpp"
 #include "PaymentProcess.hpp"
 #include "CommonTypes.hpp"
+#include <format>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -72,7 +73,8 @@ int main(int argc, char* argv[]) {
         }
 
         ClientManager client_manager(num_clients);
-        client_manager.start_simulation();
+
+        client_manager.start_simulation("simulation_results");
 
         std::cout << "\n[MAIN] Todos los clientes han sido atendidos.\n";
         std::cout << "[MAIN] Apagando el motor de búsqueda...\n";

@@ -7,6 +7,7 @@ BIN_DIR := code/bin
 TEST_DIR = code/tests
 BUILD_DIR = $(TEST_DIR)/build
 TARGET  := $(BIN_DIR)/SSOOIIGLE
+RESULTS := simulation_results
 
 
 SRCS := $(wildcard $(SRC_DIR)/*.cpp)
@@ -30,8 +31,11 @@ $(BIN_DIR):
 run: all
 	./$(TARGET)
 
-clean: clean-test
+clean: clean-test clean-results
 	rm -rf $(OBJ_DIR) $(BIN_DIR)
+
+clean-results:
+	rm -rf $(RESULTS)
 
 re: clean all
 

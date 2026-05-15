@@ -36,5 +36,7 @@ code/tests/build/
 !code/tests/CMakeLists.txt
 !code/tests/*.cpp
 
+# --- Resultados ---
+simulation_results/
 
 
