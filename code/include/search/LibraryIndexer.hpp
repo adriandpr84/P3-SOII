@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "SearchTypes.hpp"
+#include "utils/SearchTypes.hpp"
 #include <filesystem>
 #include <string>
 #include <utility>

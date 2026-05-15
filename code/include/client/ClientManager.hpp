@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "CommonTypes.hpp"
+#include "utils/CommonTypes.hpp"
 #include "Dictionary.hpp"
 #include <vector>
 #include <thread>

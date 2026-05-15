@@ -5,7 +5,7 @@
  * Purpose      : Lógica de selección de colas y actualización de contadores de espera.
  */
 
-#include "PriorityScheduler.hpp"
+#include "search/PriorityScheduler.hpp"
 
 PriorityScheduler::PriorityScheduler(std::vector<int> weights)
     : random_gen(std::random_device{}()), 

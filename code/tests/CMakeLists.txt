@@ -7,7 +7,9 @@ add_compile_options(-Wall -Wextra -Werror -g)
 
 
 include_directories(../include)
-
+include_directories(../include/search)
+include_directories(../include/utils)
+include_directories(../include/client)
 
 find_package(Threads REQUIRED)
 
@@ -15,7 +17,7 @@ find_package(Threads REQUIRED)
 enable_testing()
 
 
-add_executable(test_scheduler test_priority_scheduler.cpp ../src/PriorityScheduler.cpp)
+add_executable(test_scheduler test_priority_scheduler.cpp ../src/search/PriorityScheduler.cpp)
 target_link_libraries(test_scheduler PRIVATE Threads::Threads)
 
 
@@ -28,11 +30,11 @@ add_test(NAME Scheduler_Starvation      COMMAND test_scheduler STARVATION)
 
 add_executable(test_search_engine 
     test_search_engine.cpp 
-    ../src/SearchManager.cpp
-    ../src/SearchService.cpp
-    ../src/ChunkSearcher.cpp
-    ../src/LibraryIndexer.cpp
-    ../src/PriorityScheduler.cpp
+    ../src/search/SearchManager.cpp
+    ../src/search/SearchService.cpp
+    ../src/search/ChunkSearcher.cpp
+    ../src/search/LibraryIndexer.cpp
+    ../src/search/PriorityScheduler.cpp
 )
 target_link_libraries(test_search_engine PRIVATE Threads::Threads)
 

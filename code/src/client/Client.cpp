@@ -6,8 +6,8 @@
  *                Ejecutará la petición bloqueándose a la espera de resultados y, al finalizar, calculará el tiempo total y guardará los resultados en un archivo privado.
  */
 
-#include "Client.hpp"
-#include "SearchManager.hpp"
+#include "client/Client.hpp"
+#include "search/SearchManager.hpp"
 #include <iostream>
 #include <format>
 #include <fstream>

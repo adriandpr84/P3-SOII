@@ -5,8 +5,8 @@
  * Purpose      : Implementación del servidor de pagos independiente.
  */
 
-#include "PaymentProcess.hpp"
-#include "PaymentTypes.hpp"
+#include "payment/PaymentProcess.hpp"
+#include "utils/PaymentTypes.hpp"
 #include <iostream>
 #include <format>
 #include <chrono>

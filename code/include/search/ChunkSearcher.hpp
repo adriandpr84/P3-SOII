@@ -9,10 +9,10 @@
 
 #pragma once
 
-#include "ConcurrentQueue.hpp"
-#include "Occurrence.hpp"
-#include "SearchResultsTypes.hpp"
-#include "SearchTypes.hpp"
+#include "utils/ConcurrentQueue.hpp"
+#include "utils/Occurrence.hpp"
+#include "utils/SearchResultsTypes.hpp"
+#include "utils/SearchTypes.hpp"
 #include <condition_variable>
 #include <fstream>
 #include <future>

@@ -5,11 +5,11 @@
  * Purpose      : Esta clase realiza la simulación dividiendo el sistema en 2 procesos con fork().
  */
 
-#include "SearchManager.hpp"
-#include "ClientManager.hpp"
-#include "PaymentProxy.hpp"
-#include "PaymentProcess.hpp"
-#include "CommonTypes.hpp"
+#include "search/SearchManager.hpp"
+#include "client/ClientManager.hpp"
+#include "payment/PaymentProxy.hpp"
+#include "payment/PaymentProcess.hpp"
+#include "utils/CommonTypes.hpp"
 #include <format>
 #include <iostream>
 #include <string>

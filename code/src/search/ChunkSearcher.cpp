@@ -6,7 +6,7 @@
  * Purpose      : Clase buscador que proporciona funcionalidad a los hilos, para localizar las palabras en los libros.
  */
 
-#include "ChunkSearcher.hpp"
+#include "search/ChunkSearcher.hpp"
 
 #include <format>
 #include <iostream>

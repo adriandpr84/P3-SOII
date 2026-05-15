@@ -7,7 +7,7 @@
  */
 
 
-#include "Dictionary.hpp"
+#include "client/Dictionary.hpp"
 
 Dictionary::Dictionary() {
     std::random_device rd;

@@ -8,8 +8,9 @@
 
 #pragma once
 
-#include "ChunkSearcher.hpp" // Necesario para ChunkTask y ChunkResult
-#include "SearchTypes.hpp"
+#include "utils/SearchTypes.hpp"
+#include "utils/SearchResultsTypes.hpp"
+#include "ChunkSearcher.hpp" 
 #include <condition_variable>
 #include <future>
 #include <mutex>

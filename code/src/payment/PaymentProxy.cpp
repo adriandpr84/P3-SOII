@@ -5,8 +5,8 @@
  * Purpose      : Implementación del proxy de pagos usando colas de mensajes.
  */
 
-#include "PaymentProxy.hpp"
-#include "PaymentTypes.hpp"
+#include "payment/PaymentProxy.hpp"
+#include "utils/PaymentTypes.hpp"
 #include <iostream>
 #include <stdexcept>
 

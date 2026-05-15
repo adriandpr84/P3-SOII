@@ -1,5 +1,6 @@
 CXX := g++
-CXXFLAGS := -Wall -Wextra -Werror -std=c++20 -pthread -g -Icode/include
+BASE_CXXFLAGS := -Wall -Wextra -Werror -std=c++20 -pthread -Icode/include
+CXXFLAGS := $(BASE_CXXFLAGS) -g -O0
 
 SRC_DIR := code/src
 OBJ_DIR := code/obj
@@ -14,6 +15,9 @@ SRCS := $(shell find $(SRC_DIR) -name '*.cpp')
 OBJS := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRCS))
 
 all: $(TARGET)
+
+release: CXXFLAGS := $(BASE_CXXFLAGS) -O3
+release: re
 
 $(TARGET): $(OBJS) | $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) -o $@ $^

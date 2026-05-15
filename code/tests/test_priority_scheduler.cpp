@@ -4,7 +4,7 @@
 #include <vector>
 #include <atomic>
 #include <string>
-#include "PriorityScheduler.hpp"
+#include "search/PriorityScheduler.hpp"
 
 // Función auxiliar para generar peticiones
 InternalSearchRequest create_dummy_request(int client_id) {

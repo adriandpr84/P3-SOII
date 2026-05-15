@@ -6,8 +6,8 @@
  * finalización
  */
 
-#include "ClientManager.hpp"
-#include "Client.hpp"
+#include "client/ClientManager.hpp"
+#include "client/Client.hpp"
 #include <filesystem>
 #include <format>
 #include <iostream>

@@ -5,9 +5,9 @@
  * Purpose      : Implementación de la división de tareas en hilos de búsqueda y consolidación de resultados.
  */
 
-#include "SearchService.hpp"
-#include "ConcurrentQueue.hpp"
-#include "SearchManager.hpp"
+#include "search/SearchService.hpp"
+#include "utils/ConcurrentQueue.hpp"
+#include "search/SearchManager.hpp"
 
 void SearchService::operator()() {
 

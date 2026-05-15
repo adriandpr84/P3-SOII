@@ -8,7 +8,7 @@
 #pragma once
 
 #include <string>
-#include "CommonTypes.hpp"
+#include "utils/CommonTypes.hpp"
 
 class Client {
 private:

@@ -1,5 +1,5 @@
-#include "CommonTypes.hpp"
-#include "SearchManager.hpp"
+#include "utils/CommonTypes.hpp"
+#include "search/SearchManager.hpp"
 #include <iostream>
 #include <string>
 #include <thread>

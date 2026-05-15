@@ -14,7 +14,7 @@
 #include <queue>
 #include <random>
 #include <mutex>
-#include "SearchTypes.hpp"
+#include "utils/SearchTypes.hpp"
 
 constexpr int MAX_STARVATION = 100;
 

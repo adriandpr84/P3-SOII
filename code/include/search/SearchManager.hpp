@@ -9,10 +9,10 @@
 
 #pragma once
 
-#include "CommonTypes.hpp" // SearchResult y SearchRequest
+#include "utils/CommonTypes.hpp" // SearchResult y SearchRequest
+#include "utils/SearchTypes.hpp" // InternalSearchRequest
 #include "PriorityScheduler.hpp"
 #include "SearchService.hpp"
-#include "SearchTypes.hpp" // InternalSearchRequest
 #include <array>
 #include <atomic>
 #include <shared_mutex>

@@ -6,7 +6,7 @@
  * Purpose      : Implementación del indexado de archivos mediante el cálculo de offsets de línea.
  */
 
-#include "LibraryIndexer.hpp"
+#include "search/LibraryIndexer.hpp"
 #include <cstring>
 #include <format>
 #include <fstream>

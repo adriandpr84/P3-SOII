@@ -5,8 +5,8 @@
  * Purpose      : Orquestación de servicios de búsqueda, inicialización de réplicas y gestión de apagado.
  */
 
-#include "SearchManager.hpp"
-#include "LibraryIndexer.hpp"
+#include "search/SearchManager.hpp"
+#include "search/LibraryIndexer.hpp"
 #include <format>
 #include <unordered_set>
 
