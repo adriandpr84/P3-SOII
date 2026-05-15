@@ -3,8 +3,7 @@
  * Program      : SearchService.hpp
  * Author       : Adrián Díaz-Plaza Remesal
  * Date created : 24/04/2026
- * Purpose      : Archivo de cabecera de la clase SearchService.
- * Representa una replica de buscadores, procesará las peticiones de los clientes.
+ * Purpose      : Representa una réplica del buscador que gestiona un pool de hilos para procesar una petición completa.
  */
 
 #pragma once

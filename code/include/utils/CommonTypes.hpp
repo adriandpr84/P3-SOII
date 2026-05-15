@@ -4,8 +4,6 @@
  * Author       : Adrián Díaz-Plaza Remesal
  * Date created : 24/04/2026
  * Purpose      : Define tipos y estructuras que serán usados en todo el sistema
- * Revision     :
- *
  */
 
 

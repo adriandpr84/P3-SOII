@@ -3,11 +3,9 @@
  * Program      : ConcurrentQueue.hpp
  * Author       : Adrián Díaz-Plaza Remesal
  * Date created : 30/04/2026
- * Purpose      : //TODO descripcion
- * Revision     :
- *
+ * Purpose      : Cola genérica thread-safe sincronizada mediante mutex y variables de condición para el modelo
+ * productor-consumidor.
  */
-
 
 #pragma once
 #include <condition_variable>

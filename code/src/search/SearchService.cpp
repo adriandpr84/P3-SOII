@@ -2,9 +2,7 @@
  * Project      : Practica 3 de Sistemas Operativos II
  * Program      : SearchService.cpp
  * Author       : Adrián Díaz-Plaza Remesal
- * Purpose      : // TODO descripcion
- * Revision :
- * 27/05/2026 - Adrián - Creación de stubs para permitir compilación.
+ * Purpose      : Implementación de la división de tareas en hilos de búsqueda y consolidación de resultados.
  */
 
 #include "SearchService.hpp"
@@ -53,7 +51,7 @@ int SearchService::precalculate_chunks() {
 }
 
 void SearchService::produce_tasks(const std::string &target_word,
-                                              std::vector<std::future<ChunkResult>> &chunks_futures) {
+                                  std::vector<std::future<ChunkResult>> &chunks_futures) {
 
 	for (auto &book_metadata : library) {
 		int thread_id = 0;

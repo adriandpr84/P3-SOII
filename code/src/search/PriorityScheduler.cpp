@@ -2,11 +2,8 @@
  * Project      : Practica 3 de Sistemas Operativos II
  * Program      : PriorityScheduler.cpp
  * Author       : Adrián Díaz-Plaza Remesal
- * Purpose      : // TODO descripcion
- * Revision :
- * 27/05/2026 - Adrián - Creación de stubs para permitir compilación.
+ * Purpose      : Lógica de selección de colas y actualización de contadores de espera.
  */
-
 
 #include "PriorityScheduler.hpp"
 

@@ -1,3 +1,11 @@
+/**
+ * Project      : Practica 3 de Sistemas Operativos II
+ * Program      : LibraryIndexer.cpp
+ * Author       : Adrián Díaz-Plaza Remesal
+ * Date created : 30/04/2026
+ * Purpose      : Implementación del indexado de archivos mediante el cálculo de offsets de línea.
+ */
+
 #include "LibraryIndexer.hpp"
 #include <cstring>
 #include <format>
@@ -63,7 +71,7 @@ std::vector<ChunkMetadata> LibraryIndexer::process_file(const std::string &file_
 	}
 
 	file_line_index.back().last_chunk = true;
-	file_line_index.back().end_line = current_line- 1;
+	file_line_index.back().end_line = current_line - 1;
 
 	return file_line_index;
 }

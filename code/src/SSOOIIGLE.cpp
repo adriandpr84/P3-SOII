@@ -1,6 +1,6 @@
 /**
  * Project      : Practica 3 de Sistemas Operativos II
- * Program      : main.cpp
+ * Program      : SSOOIIGLE.cpp
  * Author       : Manuel Martín-Tembleque García-Serrano.
  * Purpose      : Esta clase realiza la simulación dividiendo el sistema en 2 procesos con fork().
  */

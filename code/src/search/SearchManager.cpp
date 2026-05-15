@@ -2,9 +2,7 @@
  * Project      : Practica 3 de Sistemas Operativos II
  * Program      : SearchManager.cpp
  * Author       : Adrián Díaz-Plaza Remesal
- * Purpose      : // TODO descripcion
- * Revision :
- * 27/05/2026 - Adrián - Creación de stubs para permitir compilación.
+ * Purpose      : Orquestación de servicios de búsqueda, inicialización de réplicas y gestión de apagado.
  */
 
 #include "SearchManager.hpp"

@@ -4,12 +4,6 @@
  * Author       : Adrián Díaz-Plaza Remesal
  * Date created : 16/03/2026
  * Purpose      : Clase buscador que proporciona funcionalidad a los hilos, para localizar las palabras en los libros.
- * Revision     :
- * 16/03/2026 - Adrián - Creación del metodo read_file(), procesamiento de lineas del archivo.
- * 18/03/2026 - Adrián - Creación de metodos para detectar matches validos y deteccion de palabras anteriores y
- * posteriores. Incorporación de mutex. 20/03/2026 - Adrián - Manejo de edge cases cuando la palabra buscada está al
- * principio o al final de la linea 27/03/2026 - Adrián - Manejo de edge cases cuando las palabras anterior o posterior
- * se encuentran en porciones de otros hilos
  */
 
 #include "ChunkSearcher.hpp"

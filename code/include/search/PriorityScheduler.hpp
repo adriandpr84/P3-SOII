@@ -3,8 +3,7 @@
  * Program      : PriorityScheduler.hpp
  * Author       : Adrián Díaz-Plaza Remesal
  * Date created : 24/04/2026
- * Purpose      : Implementa el planificador de prioridades de clientes, 
- *                gestionando las colas según proporción.
+ * Purpose      : Planificador de peticiones basado en pesos de prioridad y control de inanición (starvation).
  */
 
 

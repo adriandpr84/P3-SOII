@@ -3,12 +3,9 @@
  * Program      : ChunkSearcher.hpp
  * Author       : Adrián Díaz-Plaza Remesal
  * Date created : 30/04/2026
- * Purpose      : //TODO descripcion
- * Revision     :
- *
+ * Purpose      : Busca una palabra en un fragmento de archivo asignado a un hilo, extrayendo las coincidencias y su
+ * contexto (palabra anterior/posterior).
  */
-
-
 
 #pragma once
 

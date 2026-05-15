@@ -10,23 +10,21 @@ TARGET  := $(BIN_DIR)/SSOOIIGLE
 RESULTS := simulation_results
 
 
-SRCS := $(wildcard $(SRC_DIR)/*.cpp)
-OBJS := $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
+SRCS := $(shell find $(SRC_DIR) -name '*.cpp')
+OBJS := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRCS))
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS) | $(BIN_DIR)
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(OBJ_DIR):
-	mkdir -p $(OBJ_DIR)
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
-
 
 run: all
 	./$(TARGET)
@@ -47,6 +45,5 @@ test:
 
 clean-test:
 	@rm -rf $(BUILD_DIR)
-
 
 .PHONY: all clean run re test clean-test

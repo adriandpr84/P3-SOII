@@ -4,8 +4,6 @@
  * Author       : Adrián Díaz-Plaza Remesal
  * Date created : 24/04/2026
  * Purpose      : Define las estructuras y tipos que usará internamente el motor de busqueda.
- * Revision     :
- *
  */
 
 #pragma once
