@@ -3,8 +3,7 @@
  * Program      : Client.cpp
  * Author       : Manuel Martín-Tembleque García-Serrano.
  * Purpose      : Modelar cada usuario como una entidad activa. Esta clase almacenará su ID, el tipo de cuenta
- * (gratuita, premium, premium ilimitada) y su saldo si corresponde. Ejecutará la petición bloqueándose a la espera de
- * resultados y, al finalizar, calculará el tiempo total y guardará los resultados en un archivo privado.
+ * (gratuita, premium, premium ilimitada) y su saldo si corresponde. 
  */
 
 #include "client/Client.hpp"
@@ -16,6 +15,7 @@
 Client::Client(int _id, ClientType _type, int _balance, std::string _target_word, const std::string& _simulation_path)
     : id(_id), type(_type), balance(_balance), target_word(std::move(_target_word)), simulation_path(_simulation_path) {}
 
+// Método principal del hilo cliente.
 void Client::operator()() {
 	std::string type_str = (type == ClientType::FREE)                ? "GRATUITO"
 	                       : (type == ClientType::PREMIUM_UNLIMITED) ? "PREMIUM ILIMITADO"
@@ -30,9 +30,10 @@ void Client::operator()() {
 	request.target_word = target_word;
 	request.balance = balance;
 
-	// Obtener la instancia del Singleton.
+	// Obtener la instancia del motor de busqueda.
 	SearchResult result;
 	try {
+		// El hilo cliente se detiene hasta que el motor de búsqueda devuelva todos los resultados.
 		result = SearchManager::get_instance().execute_search(request);
 	} catch (const std::exception &e) {
 		std::cerr << "No se pudo mandar la peticion\n";
@@ -44,7 +45,7 @@ void Client::operator()() {
 
 	std::cout << std::format("[CLIENTE {}] Finalizado en {:.2f} ms. Resultados guardados.\n", id, result.total_time);
 }
-
+// Método para guardar los resultados de búsqueda en un archivo específico para cada cliente.
 void Client::save_results_to_file(const SearchResult &result) {
 	std::string filename = std::format("{}/resultados_cliente_{}.txt", simulation_path, id);
 	std::ofstream file(filename);

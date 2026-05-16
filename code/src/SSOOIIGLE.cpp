@@ -20,19 +20,19 @@
 #include <csignal>   
 
 volatile sig_atomic_t g_shutdown_requested = 0;
-
+// Manejador de señal para SIGINT.
 void handle_sigint(int sig) {
     (void)sig;
     g_shutdown_requested = 1;
     std::signal(SIGINT, SIG_DFL);
 }
-
+// Estructura para almacenar la configuración de la simulación, con valores por defecto.
 struct SimulationConfig {
     int num_clients = 50;
     int num_replicas = 4;
     std::string books_path = "./libros"; 
 };
-
+// Función para parsear los argumentos de línea de comandos y llenar la estructura de configuración.    
 SimulationConfig parse_arguments(int argc, char* argv[]) {
     SimulationConfig config;
     
@@ -55,7 +55,7 @@ SimulationConfig parse_arguments(int argc, char* argv[]) {
     }
     return config;
 }
-
+// Agrupa la lógica de arranque del motor y del proxy IPC.
 bool initialize_systems(const SimulationConfig& config) {
     try {
         PaymentProxy::get_instance().init();
@@ -72,7 +72,7 @@ bool initialize_systems(const SimulationConfig& config) {
         return false;
     }
 }
-
+// Cierra de forma ordenada el gestor de búsquedas y notifica al proceso de pago
 void shutdown_systems(pid_t child_pid) {
     std::cout << "\n[MAIN] Apagando el motor de búsqueda...\n";
     SearchManager::get_instance().shutdown();
@@ -82,7 +82,7 @@ void shutdown_systems(pid_t child_pid) {
 
     waitpid(child_pid, nullptr, 0);
 }
-
+// Función principal para ejecutar la lógica del proceso padre, que maneja la simulación de clientes y coordina el apagado.
 int run_parent_process(pid_t child_pid, const SimulationConfig& config) {
     std::cout << std::format("[MAIN] Proceso principal (PID: {}). Hijo creado para pagos (PID: {}).\n", getpid(), child_pid);
 
@@ -125,7 +125,7 @@ int main(int argc, char* argv[]) {
     std::cout << "=== Iniciando Buscador SSOOIIGLE ===\n";
     std::cout << std::format("Clientes: {} | Réplicas: {} | Directorio: {}\n\n", 
                              config.num_clients, config.num_replicas, config.books_path);
-
+    // Crear un proceso hijo para el sistema de pagos.
     pid_t pid = fork();
 
     if (pid < 0) {
@@ -133,11 +133,13 @@ int main(int argc, char* argv[]) {
         return 1;
     } 
     else if (pid == 0) {
+        // Código exclusivo para el proceso hijo.
         std::signal(SIGINT, SIG_IGN); 
         PaymentProcess::run_server();
         return 0; 
     } 
     else {
+        // Código exclusivo para el proceso padre.
         int exit_status = run_parent_process(pid, config);
         
         std::cout << "=== Fin de la simulación ===\n";

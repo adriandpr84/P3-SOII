@@ -2,8 +2,7 @@
  * Project      : Practica 3 de Sistemas Operativos II
  * Program      : ClientManager.cpp
  * Author       : Manuel Martín-Tembleque García-Serrano.
- * Purpose      : Encargarse de la creación de los clientes. Controlará la instanciación de hilos y su posterior
- * finalización
+ * Purpose      : Encargarse de la creación de los clientes. Controlará la instanciación de hilos.
  */
 
 #include "client/ClientManager.hpp"
@@ -19,7 +18,7 @@ ClientManager::ClientManager(int _total_clients) : total_clients(_total_clients)
 ClientManager::~ClientManager() {
     wait_for_clients();
 }
-
+// Método para esperar a que todos los hilos cliente finalicen antes de destruir el ClientManager.
 void ClientManager::wait_for_clients() {
     for (auto &t : client_threads) {
         if (t.joinable()) {
@@ -27,7 +26,7 @@ void ClientManager::wait_for_clients() {
         }
     }
 }
-
+// Método para generar un tipo de cliente aleatorio basado en las probabilidades definidas en SystemConfig.
 ClientType ClientManager::generate_random_type() {
     int random_val = rand() % 100;
     if (random_val < Config::PROB_FREE) {
@@ -38,14 +37,14 @@ ClientType ClientManager::generate_random_type() {
         return ClientType::PREMIUM_UNLIMITED;
     }
 }
-
+// Método para preparar el directorio de resultados.
 void ClientManager::prepare_directory(const std::string &path) {
     if (std::filesystem::exists(path)) {
         std::filesystem::remove_all(path);
     }
     std::filesystem::create_directories(path);
 }
-
+// Método principal para iniciar la simulación de clientes.
 void ClientManager::start_simulation(const std::string &simulation_path, const volatile sig_atomic_t& shutdown_flag) {
     std::cout << std::format("[CLIENT MANAGER] Iniciando simulación con {} clientes...\n", total_clients);
     try {
@@ -55,7 +54,7 @@ void ClientManager::start_simulation(const std::string &simulation_path, const v
     }
     
     int clients_created = 0;
-
+    // Lanzar clientes en lotes para simular la llegada gradual de usuarios.
     while (clients_created < total_clients && !shutdown_flag) {
         int clients_to_create = std::min(Config::CLIENT_BATCH_SIZE, total_clients - clients_created);
 
