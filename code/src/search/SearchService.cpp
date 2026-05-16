@@ -66,6 +66,7 @@ void SearchService::produce_tasks(const std::string &target_word, std::vector<st
     for (auto &book_metadata : library) {
         int thread_id = 0;
 
+		// Para cada fragmento del libro, se crea una tarea con su propia promesa y se encola en el buffer de tareas.
         for (auto &chunk : book_metadata.line_index) {
             ChunkTask task(++thread_id, chunk.start_line, chunk.end_line, chunk.start_line_byte, book_metadata.path, target_word, monitor);
             chunks_futures.push_back(task.get_future());
@@ -81,6 +82,7 @@ std::vector<BookResult> SearchService::build_results(std::vector<std::future<Chu
 
     int future_idx = 0;
 
+	// Se reconstruyen los resultados por libro y fragmento, respetando el orden de los libros y sus fragmentos.
     for (size_t book_idx = 0; book_idx < library.size(); book_idx++) {
         BookResult book_result;
         book_result.book_name = library[book_idx].path;
@@ -94,6 +96,7 @@ std::vector<BookResult> SearchService::build_results(std::vector<std::future<Chu
             }
         }
 
+		// Se descartan libros vacíos (sin ocurrencias ni errores)
         if (!book_result.chunks.empty()) {
             result.push_back(std::move(book_result));
         }
@@ -109,7 +112,7 @@ void SearchService::stop_workers() {
 
     std::cout << std::format("[SEARCH SERVICE {}] Apagando replica...\n", replica_id);
     int n_chunks_threads = static_cast<int>(chunk_threads.size());
-
+	
     for (int i = 0; i < n_chunks_threads; i++)
         task_queue.push(ChunkTask::create_shutdown_task());
 

@@ -23,7 +23,7 @@ class FreeMonitor : public SearchMonitor {
 	int client_id;
 	int words_found = 0;
 
-	// Permite a los hilos buscadores comprobar si deben abortar sin adquirir el mutex
+	// Permite a los hilos buscadores comprobar si deben abortar sin el coste de adquirir el mutex
 	std::atomic<bool> search_finished{false};
 
   public:
@@ -40,6 +40,8 @@ class FreeMonitor : public SearchMonitor {
 
 		std::lock_guard<std::mutex> lock(mtx);
 
+		// Si el contador de palabras encontradas alcanza el máximo permitido, 
+		// se marca la búsqueda como finalizada para que los demás hilos se detengan eventualmente.
 		if (words_found < Config::MAX_WORDS_FREE) {
 			words_found++;
 			if (words_found >= Config::MAX_WORDS_FREE) {
@@ -76,24 +78,24 @@ class PremiumLimitedMonitor : public SearchMonitor {
 			cv.wait(lock, [this] { return !is_paying; });
 		}
 	}
-	
-	bool register_match() override {
-		std::unique_lock<std::mutex> lock(mtx);
 
+	// Si el saldo es 0, el primer hilo que llegue se encargará de hacer la recarga, mientras los demás esperan.
+	bool register_match() override {
+		std::unique_lock<std::mutex> lock(mtx);	
 		while (is_paying || balance == 0) {
 			if (is_paying) {
 				cv.wait(lock, [this] { return !is_paying; });
 			} else if (balance == 0) {
 				is_paying = true;
 				std::cout << std::format("[CLIENTE {}] Limite de saldo alcanzado, recargando...\n", client_id);
+
 				lock.unlock();
-
 				int new_balance = PaymentProxy::get_instance().process_payment(client_id);
-
 				lock.lock();
+				
 				balance = new_balance;
 				is_paying = false;
-				cv.notify_all();
+				cv.notify_all(); 
 			}
 		}
 
@@ -110,7 +112,7 @@ class PremiumUnlimitedMonitor : public SearchMonitor {
 	bool register_match() override { return true; }
 };
 
-// Factoría de objetos que construye instancias según el tipo de cliente
+// Factoría de objetos que construye instancias según el tipo de cliente y sus parámetros asociados.
 std::unique_ptr<SearchMonitor> SearchMonitor::create(int client_id, int initial_balance, ClientType type) {
 	switch (type) {
 	case ClientType::FREE:

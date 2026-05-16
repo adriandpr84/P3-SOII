@@ -11,6 +11,9 @@
 PriorityScheduler::PriorityScheduler(std::vector<int> weights)
     : random_gen(std::random_device{}()), 
       priority_selector(weights.begin(), weights.end()), 
+
+      // El +1 reserva la última cola exclusivamente para las peticiones de apagado (SHUTDOWN),
+      // asegurando que no se mezclen con el tráfico de clientes normales.
       priority_queues(weights.size()+1) {}
 
    
@@ -19,12 +22,14 @@ void PriorityScheduler::push(InternalSearchRequest request, int queue_index) {
     
     priority_queues[queue_index].requests_queue.push(std::move(request));
     total_pending_requests++;
-    
+
+    // Despierta a un único hilo de réplica que esté esperando trabajo.
     cv_empty_queue.notify_one();
 }
 
 InternalSearchRequest PriorityScheduler::pop() {
     std::unique_lock<std::mutex> lock(scheduler_mutex);
+    // El hilo se suspende hasta que haya al menos una petición en el sistema.
     cv_empty_queue.wait(lock, [this] { return total_pending_requests > 0; });
 
     int served_idx = determine_queue_extraction();
@@ -40,6 +45,7 @@ int PriorityScheduler::determine_queue_extraction() {
 	int n_queues = static_cast<int>(priority_queues.size()-1);
 
 	//Extracción por starvation
+    // Evita que los usuarios FREE queden bloqueados para siempre si entran muchos PREMIUM.
     for (int i = 0; i < n_queues; ++i) {
         if (priority_queues[i].starvation_counter >= Config::MAX_STARVATION && 
             !priority_queues[i].requests_queue.empty()) {
@@ -48,6 +54,7 @@ int PriorityScheduler::determine_queue_extraction() {
     }
 
 	//Extracción por prioridad
+    //Ruleta basada en los pesos configurados
     int start_idx = priority_selector(random_gen);
     for (int i = 0; i < n_queues; ++i) {
         int current_idx = (start_idx + i) % n_queues;
@@ -56,7 +63,9 @@ int PriorityScheduler::determine_queue_extraction() {
         }
     }
 
-    return priority_queues.size() - 1; // Si se llega aqui, DEBE ser la cola de finalización
+    // Si llega aquí, es porque la única cola con elementos es la de apagado (SHUTDOWN)
+    return priority_queues.size() - 1;
+    
 }
 
 InternalSearchRequest PriorityScheduler::extract_from_queue(ManagedQueue& target_queue) {

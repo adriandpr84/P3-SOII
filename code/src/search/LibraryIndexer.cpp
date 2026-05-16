@@ -22,6 +22,7 @@ std::vector<BookMetadata> LibraryIndexer::prepare_library(const std::string &dir
         throw std::invalid_argument("[ERROR] No existe el directorio.");
     }
 
+
     for (const auto &entry : std::filesystem::directory_iterator(directory_path)) {
         if (!entry.is_regular_file())
             continue;

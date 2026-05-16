@@ -62,7 +62,9 @@ ChunkResult ChunkSearcher::read_file(const ChunkTask &task, SearchMonitor *monit
 	std::string line_text;
 	std::string last_word = prepare_initial_context(file, task.start_line);
 
+	// Se recorre el fragmento asignado línea a línea, buscando la palabra objetivo y almacenando las ocurrencias.
 	for (int line_num = task.start_line; line_num <= task.end_line && std::getline(file, line_text); line_num++) {
+		// Si el monitor indica que se debe detener la búsqueda, se rompe el bucle y se devuelve el resultado parcial.
 		if (monitor->should_stop())
 			break;
 		monitor->wait_for_payment();
@@ -91,6 +93,7 @@ void ChunkSearcher::process_line(std::string &line, int line_num, const std::str
 	size_t pos = 0;
 	while ((pos = line.find(task.target_word, pos)) != std::string::npos) {
 		if (is_valid_match((int)pos, task.target_word, line)) {
+			// Si se encuentra una coincidencia válida, se registra en el monitor y se almacena la ocurrencia.
 			monitor->register_match();
 			store_occurrence(line, pos, line_num, previous_context, task, result);
 		}
