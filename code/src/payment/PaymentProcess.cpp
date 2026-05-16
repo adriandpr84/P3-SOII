@@ -16,6 +16,11 @@
 void PaymentProcess::run_server() {
     std::cout << std::format("[SISTEMA PAGO] Iniciando proceso independiente (PID: {})...\n", getpid());
 
+    int msgid_old = msgget(IPC_PAYMENT_KEY, 0666);
+    if (msgid_old != -1) {
+        msgctl(msgid_old, IPC_RMID, nullptr); 
+    }
+
     int msgid = msgget(IPC_PAYMENT_KEY, 0666 | IPC_CREAT);
     if (msgid == -1) {
         std::cerr << "[SISTEMA PAGO] Error fatal al crear/acceder a la cola IPC.\n";
@@ -39,7 +44,7 @@ void PaymentProcess::run_server() {
 
         std::cout << std::format("[SISTEMA PAGO] Procesando recarga para el cliente {}...\n", msg.client_id);
 
-        msg.mtype = msg.client_id; 
+        msg.mtype = msg.client_id + RESPONSE_OFFSET; 
         msg.recharged_balance = 10; 
 
         std::cout << std::format("[SISTEMA PAGO] Enviando {} créditos al cliente {}.\n", msg.recharged_balance, msg.client_id);

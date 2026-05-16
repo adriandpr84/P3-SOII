@@ -31,7 +31,7 @@ int PaymentProxy::process_payment(int client_id) {
         return 0;
     }
 
-    if (msgrcv(msgid, &msg, sizeof(PaymentMessage) - sizeof(long), client_id, 0) == -1) {
+    if (msgrcv(msgid, &msg, sizeof(PaymentMessage) - sizeof(long), client_id + RESPONSE_OFFSET, 0) == -1) {
         std::cerr << "[PROXY PAGO] Error al recibir respuesta para el cliente " << client_id << "\n";
         return 0;
     }
