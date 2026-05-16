@@ -141,7 +141,7 @@ int main(int argc, char* argv[]) {
         int exit_status = run_parent_process(pid, config);
         
         std::cout << "=== Fin de la simulación ===\n";
-        std::cout << std::format("Resultados disponibles en: {}", Config::PATH_RESULTS);
+        std::cout << std::format("Resultados disponibles en: {}\n", Config::PATH_RESULTS);
         return exit_status;
     }
 }
