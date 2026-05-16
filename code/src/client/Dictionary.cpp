@@ -14,7 +14,7 @@ Dictionary::Dictionary() {
     rng = std::mt19937(rd());
 
     words = {
-        "sistemas", "operativos", "concurrencia", "hilos", 
+        "como", "más", "la", "por", 
         "procesos", "memoria", "mutex", "semaforo", "computador", "red"
     };
 }

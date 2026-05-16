@@ -39,8 +39,6 @@ void PaymentProcess::run_server() {
 
         std::cout << std::format("[SISTEMA PAGO] Procesando recarga para el cliente {}...\n", msg.client_id);
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
         msg.mtype = msg.client_id; 
         msg.recharged_balance = 10; 
 

@@ -14,11 +14,23 @@
 void ChunkSearcher::operator()() {
 	while (true) {
 		ChunkTask task = task_queue.pop();
+		SearchMonitor* monitor = task.search_monitor;
 
 		if (task.is_shutdown())
 			break;
+
+		if (monitor->should_stop()) {
+            ChunkResult empty_result;
+            empty_result.thread_id = task.thread_id;
+            empty_result.start_line = task.start_line;
+            empty_result.end_line = task.end_line;
+            
+            task.promise.set_value(std::move(empty_result));
+            continue;
+        }
+
 		try {
-			ChunkResult result = read_file(task);
+			ChunkResult result = read_file(task, monitor);
 			task.promise.set_value(std::move(result));
 		} catch (const std::exception &e) {
 			ChunkResult error_result;
@@ -33,7 +45,7 @@ void ChunkSearcher::operator()() {
 }
 
 // Procesamiento de la parte de archivo que corresponda, orquestando la busqueda linea por linea.
-ChunkResult ChunkSearcher::read_file(const ChunkTask &task) {
+ChunkResult ChunkSearcher::read_file(const ChunkTask &task, SearchMonitor* monitor) {
 	ChunkResult result;
 	result.thread_id = task.thread_id;
 	result.start_line = task.start_line;
@@ -49,8 +61,10 @@ ChunkResult ChunkSearcher::read_file(const ChunkTask &task) {
 	std::string last_word = prepare_initial_context(file, task.start_line);
 
 	for (int line_num = task.start_line; line_num <= task.end_line && std::getline(file, line_text); line_num++) {
+		if(monitor->should_stop()) break;
+		monitor->wait_for_payment();
 		complete_pending_next_word(line_text, result);
-		process_line(line_text, line_num, last_word, task, result);
+		process_line(line_text, line_num, last_word, task, result, monitor);
 		last_word = find_and_extract_word(line_text, (int)line_text.size(), Direction::BACKWARD);
 	}
 
@@ -70,10 +84,11 @@ std::string ChunkSearcher::prepare_initial_context(std::ifstream &file, int star
 
 // Realiza la busqueda en una linea en concreto, usando los metodos auxiliares necesarios.
 void ChunkSearcher::process_line(std::string &line, int line_num, const std::string &previous_context,
-                                 const ChunkTask &task, ChunkResult &result) {
+                                 const ChunkTask &task, ChunkResult &result, SearchMonitor* monitor) {
 	size_t pos = 0;
 	while ((pos = line.find(task.target_word, pos)) != std::string::npos) {
 		if (is_valid_match((int)pos, task.target_word, line)) {
+			monitor->register_match();
 			store_occurrence(line, pos, line_num, previous_context, task, result);
 		}
 		pos++;

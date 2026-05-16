@@ -8,9 +8,10 @@
 
 #pragma once
 
-#include "utils/SearchTypes.hpp"
+#include "ChunkSearcher.hpp"
+#include "payment/SearchMonitor.hpp"
 #include "utils/SearchResultsTypes.hpp"
-#include "ChunkSearcher.hpp" 
+#include "utils/SearchTypes.hpp"
 #include <condition_variable>
 #include <future>
 #include <mutex>
@@ -27,7 +28,8 @@ class SearchService {
 	std::vector<std::thread> chunk_threads;
 	ConcurrentQueue<ChunkTask> task_queue;
 
-	void produce_tasks(const std::string &target_word, std::vector<std::future<ChunkResult>> &chunks_futures);
+	void produce_tasks(const std::string &target_word, std::vector<std::future<ChunkResult>> &chunks_futures,
+	                   SearchMonitor* monitor);
 
 	int precalculate_chunks();
 

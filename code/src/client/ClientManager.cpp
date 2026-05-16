@@ -77,6 +77,6 @@ void ClientManager::start_simulation(const std::string &simulation_path) {
 			std::this_thread::sleep_for(std::chrono::seconds(1));
 		}
 
-        wait_for_clients();
 	}
+	wait_for_clients();
 }
