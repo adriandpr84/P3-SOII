@@ -51,12 +51,12 @@ struct ChunkTask {
     std::string target_word;
     std::promise<ChunkResult> promise{};
 
-    SearchMonitor* search_monitor;
+    SearchMonitor* search_monitor_ptr;
 
     ChunkTask(int id, int start, int end, std::streampos byte, std::string file, std::string word,
-              SearchMonitor* monitor = nullptr)
+              SearchMonitor* monitor_ptr = nullptr)
         : thread_id(id), start_line(start), end_line(end), start_line_byte(byte), file_name(std::move(file)),
-          target_word(std::move(word)), search_monitor(monitor) {}
+          target_word(std::move(word)), search_monitor_ptr(monitor_ptr) {}
 
     static ChunkTask create_shutdown_task() { return ChunkTask(-1, 0, 0, 0, "", ""); }
     bool is_shutdown() const { return thread_id == -1; }

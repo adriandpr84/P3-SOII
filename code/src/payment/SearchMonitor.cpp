@@ -16,11 +16,14 @@
 #include <mutex>
 #include <stdexcept>
 
+// Monitor para cuentas gratuitas: Corta el acceso de todos los hilos simultáneamente al alcanzar el límite
 class FreeMonitor : public SearchMonitor {
   private:
 	std::mutex mtx;
 	int client_id;
 	int words_found = 0;
+
+	// Permite a los hilos buscadores comprobar si deben abortar sin adquirir el mutex
 	std::atomic<bool> search_finished{false};
 
   public:
@@ -31,6 +34,7 @@ class FreeMonitor : public SearchMonitor {
 	void wait_for_payment() override {}
 
 	bool register_match() override {
+		// Doble comprobación, solo si la busqueda no se ha finalizado adquiere el mutex
 		if (search_finished)
 			return false;
 
@@ -51,6 +55,7 @@ class FreeMonitor : public SearchMonitor {
 	}
 };
 
+// Monitor para cuentas premium limitadas: Corta el acceso de todos los hilos simultáneamente al alcanzar el límite de saldo. Tras recarga, continúan
 class PremiumLimitedMonitor : public SearchMonitor {
   private:
 	std::mutex mtx;
@@ -64,13 +69,14 @@ class PremiumLimitedMonitor : public SearchMonitor {
 
 	bool should_stop() override { return false; }
 
+	// Si otro hilo está pagando, nos quedamos bloqueados aqui. 
 	void wait_for_payment() override {
 		if (is_paying) {
 			std::unique_lock<std::mutex> lock(mtx);
 			cv.wait(lock, [this] { return !is_paying; });
 		}
 	}
-
+	
 	bool register_match() override {
 		std::unique_lock<std::mutex> lock(mtx);
 
@@ -96,6 +102,7 @@ class PremiumLimitedMonitor : public SearchMonitor {
 	}
 };
 
+// Monitor para cuentas premium: Sin limites
 class PremiumUnlimitedMonitor : public SearchMonitor {
   public:
 	bool should_stop() override { return false; }
@@ -103,6 +110,7 @@ class PremiumUnlimitedMonitor : public SearchMonitor {
 	bool register_match() override { return true; }
 };
 
+// Factoría de objetos que construye instancias según el tipo de cliente
 std::unique_ptr<SearchMonitor> SearchMonitor::create(int client_id, int initial_balance, ClientType type) {
 	switch (type) {
 	case ClientType::FREE:

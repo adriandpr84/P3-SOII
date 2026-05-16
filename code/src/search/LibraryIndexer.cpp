@@ -14,67 +14,69 @@
 #include <iostream>
 #include <stdexcept>
 
+// Escanea el directorio iterativamente omitiendo archivos no legibles o binarios para preparar la búsqueda
 std::vector<BookMetadata> LibraryIndexer::prepare_library(const std::string &directory_path) {
+    std::vector<BookMetadata> library;
 
-	std::vector<BookMetadata> library;
+    if (!std::filesystem::exists(directory_path)) {
+        throw std::invalid_argument("[ERROR] No existe el directorio.");
+    }
 
-	if (!std::filesystem::exists(directory_path)) {
-		throw std::invalid_argument("[ERROR] No existe el directorio.");
-	}
+    for (const auto &entry : std::filesystem::directory_iterator(directory_path)) {
+        if (!entry.is_regular_file())
+            continue;
 
-	for (const auto &entry : std::filesystem::directory_iterator(directory_path)) {
-		if (!entry.is_regular_file())
-			continue;
+        std::string file_path = entry.path().string();
 
-		std::string file_path = entry.path().string();
+        if (is_binary(file_path)) {
+            std::cerr << std::format("[INFO] Omitiendo archivo binario: {}\n", file_path);
+            continue;
+        }
 
-		if (is_binary(file_path)) {
-			std::cerr << std::format("[INFO] Omitiendo archivo binario: {}\n", file_path);
-			continue;
-		}
+        std::vector<ChunkMetadata> index = process_file(file_path);
+        if (index.empty()) {
+            std::cerr << std::format("[WARNING] Omitiendo el archivo: {}. No se pudo abrir/procesar. \n", file_path);
+            continue;
+        }
 
-		std::vector<ChunkMetadata> index = process_file(file_path);
-		if (index.empty()) {
-			std::cerr << std::format("[WARNING] Omitiendo el archivo: {}. No se pudo abrir/procesar. \n", file_path);
-			continue;
-		}
+        library.emplace_back(file_path, std::move(index));
+    }
 
-		library.emplace_back(file_path, std::move(index));
-	}
-
-	return library;
+    return library;
 }
 
-// Escanea el archivo e indexa la posición de inicio (byte) de cada línea
+// Precalcula los offsets (bytes) de cada bloque de líneas. Esto permite que los hilos buscadores 
+// hagan un seekg() directo a su chunk sin tener que leer el archivo desde el principio.
 std::vector<ChunkMetadata> LibraryIndexer::process_file(const std::string &file_path) {
-	std::vector<ChunkMetadata> file_line_index;
-	std::ifstream file(file_path);
+    std::vector<ChunkMetadata> file_line_index;
+    std::ifstream file(file_path);
 
-	if (!file)
-		return file_line_index;
+    if (!file)
+        return file_line_index;
 
-	int current_line = 1;
-	file_line_index.push_back({current_line, 0, 0}); // Index primera linea
+    int current_line = 1;
+    file_line_index.push_back({current_line, 0, 0}); 
 
-	std::string line_text;
+    std::string line_text;
 
-	while (std::getline(file, line_text)) {
-		current_line++;
+    while (std::getline(file, line_text)) {
+        current_line++;
 
-		if (current_line % Config::LINES_PER_CHUNK == 0) {
-			std::streampos position = file.tellg();
+        // Al alcanzar el tamaño del chunk, se captura el offset exacto del puntero de lectura
+        if (current_line % Config::LINES_PER_CHUNK == 0) {
+            std::streampos position = file.tellg();
 
-			if (position != std::streampos(-1) && file.peek() != EOF) {
-				file_line_index.back().end_line = current_line;
-				file_line_index.push_back({current_line, 0, position});
-			}
-		}
-	}
+            if (position != std::streampos(-1) && file.peek() != EOF) {
+                file_line_index.back().end_line = current_line;
+                file_line_index.push_back({current_line, 0, position});
+            }
+        }
+    }
 
-	file_line_index.back().last_chunk = true;
-	file_line_index.back().end_line = current_line - 1;
+    file_line_index.back().last_chunk = true;
+    file_line_index.back().end_line = current_line - 1;
 
-	return file_line_index;
+    return file_line_index;
 }
 
 // Detecta si un archivo es binario buscando bytes nulos (\0) en los primeros
