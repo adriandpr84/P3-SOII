@@ -8,9 +8,10 @@
 #include "search/SearchService.hpp"
 #include "search/SearchManager.hpp"
 #include "utils/ConcurrentQueue.hpp"
+#include <format>
+#include <iostream>
 
 void SearchService::operator()() {
-
 	auto &manager = SearchManager::get_instance();
 
 	for (int i = 0; i < thread_count; i++) {
@@ -19,6 +20,8 @@ void SearchService::operator()() {
 
 	int total_chunks = precalculate_chunks();
 
+	std::cout << std::format("[SEARCH SERVICE {}] Replica iniciada, escuchando peticiones de busqueda...\n",
+	                         replica_id);
 	while (true) {
 		InternalSearchRequest request = manager.get_search_request();
 
@@ -26,9 +29,13 @@ void SearchService::operator()() {
 			stop_workers();
 			break;
 		}
-
-		std::unique_ptr<SearchMonitor> monitor =
-		    SearchMonitor::create(request.data.client_id, request.data.balance, request.data.type);
+		std::unique_ptr<SearchMonitor> monitor;
+		
+		try {
+			monitor = SearchMonitor::create(request.data.client_id, request.data.balance, request.data.type);
+		} catch (const std::exception& e){
+			std::cerr << std::format("[WARNING] Error al procesar la petición {}, omitiendo...", e.what());
+		}
 
 		std::vector<std::future<ChunkResult>> chunks_futures;
 		chunks_futures.reserve(total_chunks);
@@ -55,7 +62,7 @@ int SearchService::precalculate_chunks() {
 }
 
 void SearchService::produce_tasks(const std::string &target_word, std::vector<std::future<ChunkResult>> &chunks_futures,
-                                  SearchMonitor* monitor) {
+                                  SearchMonitor *monitor) {
 
 	for (auto &book_metadata : library) {
 		int thread_id = 0;
@@ -70,35 +77,36 @@ void SearchService::produce_tasks(const std::string &target_word, std::vector<st
 }
 
 std::vector<BookResult> SearchService::build_results(std::vector<std::future<ChunkResult>> &chunks_futures) {
-    std::vector<BookResult> result;
-    result.reserve(library.size());
+	std::vector<BookResult> result;
+	result.reserve(library.size());
 
-    int future_idx = 0;
+	int future_idx = 0;
 
-    for (size_t book_idx = 0; book_idx < library.size(); book_idx++) {
-        BookResult book_result;
-        book_result.book_name = library[book_idx].path;
+	for (size_t book_idx = 0; book_idx < library.size(); book_idx++) {
+		BookResult book_result;
+		book_result.book_name = library[book_idx].path;
 
-        for (int n_chunk = 0; n_chunk < chunks_per_book[book_idx]; n_chunk++) {
-            ChunkResult chunk_res = chunks_futures[future_idx++].get();
+		for (int n_chunk = 0; n_chunk < chunks_per_book[book_idx]; n_chunk++) {
+			ChunkResult chunk_res = chunks_futures[future_idx++].get();
 
-            if (!chunk_res.occurrences.empty() || !chunk_res.error_msg.empty()) {
-                book_result.chunks.push_back(std::move(chunk_res));
-            }
-        }
+			if (!chunk_res.occurrences.empty() || !chunk_res.error_msg.empty()) {
+				book_result.chunks.push_back(std::move(chunk_res));
+			}
+		}
 
-        if (!book_result.chunks.empty()) {
-            result.push_back(std::move(book_result));
-        }
-    }
+		if (!book_result.chunks.empty()) {
+			result.push_back(std::move(book_result));
+		}
+	}
 
-    return result;
+	return result;
 }
 
 void SearchService::stop_workers() {
 	if (chunk_threads.empty())
 		return;
 
+	std::cout << std::format("[SEARCH SERVICE {}] Apagando replica...\n", replica_id);
 	int n_chunks_threads = static_cast<int>(chunk_threads.size());
 
 	for (int i = 0; i < n_chunks_threads; i++)

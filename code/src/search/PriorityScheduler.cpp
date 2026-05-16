@@ -6,6 +6,7 @@
  */
 
 #include "search/PriorityScheduler.hpp"
+#include "utils/SystemConfig.hpp"
 
 PriorityScheduler::PriorityScheduler(std::vector<int> weights)
     : random_gen(std::random_device{}()), 
@@ -40,7 +41,7 @@ int PriorityScheduler::determine_queue_extraction() {
 
 	//Extracción por starvation
     for (int i = 0; i < n_queues; ++i) {
-        if (priority_queues[i].starvation_counter >= MAX_STARVATION && 
+        if (priority_queues[i].starvation_counter >= Config::MAX_STARVATION && 
             !priority_queues[i].requests_queue.empty()) {
             return i;
         }

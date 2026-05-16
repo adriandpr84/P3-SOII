@@ -7,6 +7,7 @@
  */
 
 #include "search/LibraryIndexer.hpp"
+#include "utils/SystemConfig.hpp"
 #include <cstring>
 #include <format>
 #include <fstream>
@@ -60,7 +61,7 @@ std::vector<ChunkMetadata> LibraryIndexer::process_file(const std::string &file_
 	while (std::getline(file, line_text)) {
 		current_line++;
 
-		if (current_line % LINES_PER_CHUNK == 0) {
+		if (current_line % Config::LINES_PER_CHUNK == 0) {
 			std::streampos position = file.tellg();
 
 			if (position != std::streampos(-1) && file.peek() != EOF) {

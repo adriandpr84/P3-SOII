@@ -1,7 +1,8 @@
 /**
  * Project      : Practica 3 de Sistemas Operativos II
  * Program      : SearchMonitor.hpp
- * Purpose      : Interfaz base para los monitores de búsqueda y su Factoría.
+ * Author       : Adrián Díaz-Plaza Remesal
+ * Purpose      : Interfaz base para los monitores de búsqueda.
  */
 
 #pragma once

@@ -8,9 +8,11 @@
 
 #include "client/ClientManager.hpp"
 #include "client/Client.hpp"
+#include "utils/SystemConfig.hpp"
 #include <filesystem>
 #include <format>
 #include <iostream>
+#include <chrono>
 
 ClientManager::ClientManager(int _total_clients) : total_clients(_total_clients) {}
 
@@ -28,9 +30,9 @@ void ClientManager::wait_for_clients() {
 
 ClientType ClientManager::generate_random_type() {
     int random_val = rand() % 100;
-    if (random_val < 20) {
+    if (random_val < Config::PROB_FREE) {
         return ClientType::FREE;
-    } else if (random_val < 60) {
+    } else if (random_val < (Config::PROB_FREE + Config::PROB_PREMIUM_LIMITED)) {
         return ClientType::PREMIUM_LIMITED;
     } else {
         return ClientType::PREMIUM_UNLIMITED;
@@ -53,26 +55,25 @@ void ClientManager::start_simulation(const std::string &simulation_path, const v
     }
     
     int clients_created = 0;
-    int batch_size = 5;
 
     while (clients_created < total_clients && !shutdown_flag) {
-        int clients_to_create = std::min(batch_size, total_clients - clients_created);
+        int clients_to_create = std::min(Config::CLIENT_BATCH_SIZE, total_clients - clients_created);
 
         for (int i = 0; i < clients_to_create; i++) {
             int current_id = clients_created + 1;
             ClientType type = generate_random_type();
 
-            int balance = (type == ClientType::PREMIUM_LIMITED) ? (rand() % 10 + 5) : 0;
+            int balance = (type == ClientType::PREMIUM_LIMITED) ? (rand() % Config::RECHARGE_AMOUNT + Config::MIN_INITIAL_BALANCE) : 0;
             std::string word = dict.get_random_word();
 
-            Client new_client(current_id, type, balance, word);
+            Client new_client(current_id, type, balance, word, simulation_path);
             client_threads.emplace_back(std::thread(new_client));
 
             clients_created++;
         }
 
         if (clients_created < total_clients && !shutdown_flag) {
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+            std::this_thread::sleep_for(std::chrono::milliseconds(Config::BATCH_INTERVAL_MS));
         }
     }
 

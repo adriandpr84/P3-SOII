@@ -14,9 +14,8 @@
 #include <queue>
 #include <random>
 #include <mutex>
+#include <condition_variable>
 #include "utils/SearchTypes.hpp"
-
-constexpr int MAX_STARVATION = 100;
 
 struct ManagedQueue {
     std::queue<InternalSearchRequest> requests_queue;
@@ -32,7 +31,6 @@ public:
     void push_shutdown(InternalSearchRequest shutdown_request);
 
 private:
-
     std::mutex scheduler_mutex;
     std::condition_variable cv_empty_queue;
 
@@ -41,7 +39,6 @@ private:
 
     std::vector<ManagedQueue> priority_queues;
     int total_pending_requests = 0;
-
 
     int determine_queue_extraction();
     InternalSearchRequest extract_from_queue(ManagedQueue& target_queue);

@@ -1,23 +1,31 @@
 /**
  * Project      : Practica 3 de Sistemas Operativos II
  * Program      : SearchMonitor.cpp
- * Purpose      : Implementación oculta de las jerarquías de monitores y su Factoría.
+ * Author		: Adrián Díaz-Plaza Remesal
+ * Purpose      : Implementación de los monitores que controlan la busqueda de los diferentes tipos de clientes, junto a
+ * su factoría.
  */
 
 #include "payment/SearchMonitor.hpp"
 #include "payment/PaymentProxy.hpp"
+#include "utils/SystemConfig.hpp"
+#include <atomic>
 #include <condition_variable>
+#include <format>
+#include <iostream>
 #include <mutex>
-
-constexpr int MAX_WORDS_FREE = 20;
+#include <stdexcept>
 
 class FreeMonitor : public SearchMonitor {
   private:
 	std::mutex mtx;
+	int client_id;
 	int words_found = 0;
 	std::atomic<bool> search_finished{false};
 
   public:
+	FreeMonitor(int id) : client_id(id) {}
+
 	bool should_stop() override { return search_finished; }
 
 	void wait_for_payment() override {}
@@ -28,10 +36,12 @@ class FreeMonitor : public SearchMonitor {
 
 		std::lock_guard<std::mutex> lock(mtx);
 
-		if (words_found < MAX_WORDS_FREE) {
+		if (words_found < Config::MAX_WORDS_FREE) {
 			words_found++;
-			if (words_found >= MAX_WORDS_FREE) {
+			if (words_found >= Config::MAX_WORDS_FREE) {
 				search_finished = true;
+				std::cout << std::format("[CLIENTE {}] Limite de ocurrencias alcanzado, finalizando busqueda...\n",
+				                         client_id);
 			}
 			return true;
 		}
@@ -69,6 +79,7 @@ class PremiumLimitedMonitor : public SearchMonitor {
 				cv.wait(lock, [this] { return !is_paying; });
 			} else if (balance == 0) {
 				is_paying = true;
+				std::cout << std::format("[CLIENTE {}] Limite de saldo alcanzado, recargando...\n", client_id);
 				lock.unlock();
 
 				int new_balance = PaymentProxy::get_instance().process_payment(client_id);
@@ -95,7 +106,7 @@ class PremiumUnlimitedMonitor : public SearchMonitor {
 std::unique_ptr<SearchMonitor> SearchMonitor::create(int client_id, int initial_balance, ClientType type) {
 	switch (type) {
 	case ClientType::FREE:
-		return std::make_unique<FreeMonitor>();
+		return std::make_unique<FreeMonitor>(client_id);
 
 	case ClientType::PREMIUM_LIMITED:
 		return std::make_unique<PremiumLimitedMonitor>(client_id, initial_balance);
@@ -104,6 +115,6 @@ std::unique_ptr<SearchMonitor> SearchMonitor::create(int client_id, int initial_
 		return std::make_unique<PremiumUnlimitedMonitor>();
 
 	default:
-		throw std::invalid_argument("No existe el tipo");
+		throw std::invalid_argument("No existe el tipo de cliente");
 	}
 }

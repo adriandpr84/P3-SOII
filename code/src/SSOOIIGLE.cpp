@@ -10,6 +10,7 @@
 #include "payment/PaymentProxy.hpp"
 #include "payment/PaymentProcess.hpp"
 #include "utils/CommonTypes.hpp"
+#include "utils/SystemConfig.hpp"
 #include <format>
 #include <iostream>
 #include <string>
@@ -23,22 +24,39 @@ volatile sig_atomic_t g_shutdown_requested = 0;
 void handle_sigint(int sig) {
     (void)sig;
     g_shutdown_requested = 1;
-
     std::signal(SIGINT, SIG_DFL);
 }
 
-int parse_arguments(int argc, char* argv[]) {
+struct SimulationConfig {
+    int num_clients = 50;
+    int num_replicas = 4;
+    std::string books_path = "./libros"; 
+};
+
+SimulationConfig parse_arguments(int argc, char* argv[]) {
+    SimulationConfig config;
+    
     if (argc > 1) {
-        try { 
-            return std::stoi(argv[1]); 
-        } catch (...) { 
-            std::cerr << "[ADVERTENCIA] Argumento inválido. Usando 50 clientes por defecto.\n";
-        }
+        try { config.num_clients = std::stoi(argv[1]); } 
+        catch (...) { std::cerr << "[AVISO] Fallo al leer clientes. Usando 50 por defecto.\n"; }
     }
-    return 50; 
+    
+    if (argc > 2) {
+        try { config.num_replicas = std::stoi(argv[2]); } 
+        catch (...) { std::cerr << "[AVISO] Fallo al leer réplicas. Usando 4 por defecto.\n"; }
+    }
+    
+    if (argc > 3) {
+        config.books_path = argv[3]; 
+    }
+    
+    if (argc > 4){
+        throw std::invalid_argument(std::format("Uso: {} clientes replicas ruta_libros\n", argv[0]));
+    }
+    return config;
 }
 
-bool initialize_systems(const std::string& books_path) {
+bool initialize_systems(const SimulationConfig& config) {
     try {
         PaymentProxy::get_instance().init();
 
@@ -47,7 +65,7 @@ bool initialize_systems(const std::string& books_path) {
             {20, {ClientType::FREE}}
         };
 
-        SearchManager::get_instance().init(books_path, priorities);
+        SearchManager::get_instance().init(config.books_path, priorities, config.num_replicas);
         return true;
     } catch (const std::exception& e) {
         std::cerr << "[ERROR CRÍTICO] Fallo en la inicialización: " << e.what() << "\n";
@@ -65,21 +83,21 @@ void shutdown_systems(pid_t child_pid) {
     waitpid(child_pid, nullptr, 0);
 }
 
-int run_parent_process(pid_t child_pid, int num_clients, const std::string& books_path) {
+int run_parent_process(pid_t child_pid, const SimulationConfig& config) {
     std::cout << std::format("[MAIN] Proceso principal (PID: {}). Hijo creado para pagos (PID: {}).\n", getpid(), child_pid);
 
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
-    if (!initialize_systems(books_path)) {
+    if (!initialize_systems(config)) {
         PaymentProxy::get_instance().shutdown_remote_system();
         waitpid(child_pid, nullptr, 0);
         return 1;
     }
 
     try {
-        ClientManager client_manager(num_clients);
+        ClientManager client_manager(config.num_clients);
 
-        client_manager.start_simulation("simulation_results", g_shutdown_requested);
+        client_manager.start_simulation(Config::PATH_RESULTS, g_shutdown_requested);
         
         if (g_shutdown_requested) {
             std::cout << "\n[MAIN] Simulación finalizada prematuramente por el usuario.\n";
@@ -95,14 +113,18 @@ int run_parent_process(pid_t child_pid, int num_clients, const std::string& book
 }
 
 int main(int argc, char* argv[]) {
-
     std::signal(SIGINT, handle_sigint);
+    SimulationConfig config;
 
-    int num_clients = parse_arguments(argc, argv);
-    std::string books_path = "./libros"; 
+    try{
+        config = parse_arguments(argc, argv);
+    }catch (const std::exception& e) {
+        std::cerr << std::format("[ERROR] {}\n", e.what());
+    }
 
     std::cout << "=== Iniciando Buscador SSOOIIGLE ===\n";
-    std::cout << "Clientes a simular: " << num_clients << "\n\n";
+    std::cout << std::format("Clientes: {} | Réplicas: {} | Directorio: {}\n\n", 
+                             config.num_clients, config.num_replicas, config.books_path);
 
     pid_t pid = fork();
 
@@ -111,16 +133,15 @@ int main(int argc, char* argv[]) {
         return 1;
     } 
     else if (pid == 0) {
-
         std::signal(SIGINT, SIG_IGN); 
         PaymentProcess::run_server();
         return 0; 
     } 
     else {
-
-        int exit_status = run_parent_process(pid, num_clients, books_path);
+        int exit_status = run_parent_process(pid, config);
         
         std::cout << "=== Fin de la simulación ===\n";
+        std::cout << std::format("Resultados disponibles en: {}", Config::PATH_RESULTS);
         return exit_status;
     }
 }

@@ -22,6 +22,7 @@
 
 class SearchService {
   private:
+	int replica_id;
 	const std::vector<BookMetadata> library;
 	int thread_count;
 	std::vector<int> chunks_per_book;
@@ -38,8 +39,8 @@ class SearchService {
 	void stop_workers();
 
   public:
-	SearchService(std::vector<BookMetadata> _library, int _thread_count)
-	    : library(std::move(_library)), thread_count(_thread_count) {}
+	SearchService(int _replica_id, std::vector<BookMetadata> _library, int _thread_count)
+	    : replica_id(_replica_id), library(std::move(_library)), thread_count(_thread_count) {}
 	~SearchService();
 
 	void operator()();

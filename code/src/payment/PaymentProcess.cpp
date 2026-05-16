@@ -7,6 +7,7 @@
 
 #include "payment/PaymentProcess.hpp"
 #include "utils/PaymentTypes.hpp"
+#include "utils/SystemConfig.hpp"
 #include <iostream>
 #include <format>
 #include <chrono>
@@ -27,7 +28,7 @@ void PaymentProcess::run_server() {
         return;
     }
 
-    std::cout << "[SISTEMA PAGO] Escuchando peticiones en la cola...\n";
+    std::cout << "[SISTEMA PAGO] Escuchando peticiones de pago...\n";
 
     while (true) {
         PaymentMessage msg;
@@ -42,10 +43,8 @@ void PaymentProcess::run_server() {
             break;
         }
 
-        std::cout << std::format("[SISTEMA PAGO] Procesando recarga para el cliente {}...\n", msg.client_id);
-
         msg.mtype = msg.client_id + RESPONSE_OFFSET; 
-        msg.recharged_balance = 10; 
+        msg.recharged_balance = Config::RECHARGE_AMOUNT; 
 
         std::cout << std::format("[SISTEMA PAGO] Enviando {} créditos al cliente {}.\n", msg.recharged_balance, msg.client_id);
 

@@ -7,11 +7,12 @@
 
 #include "search/SearchManager.hpp"
 #include "search/LibraryIndexer.hpp"
+#include "utils/SystemConfig.hpp"
 #include <format>
+#include <iostream>
 #include <unordered_set>
 
-constexpr int FACTOR = 2;
-constexpr int N_SEARCH_SERVICE = 4;
+constexpr int n_replicas = 4;
 constexpr int MAX_ALLOWED_THREADS = 1000;
 
 SearchManager::SearchManager() {}
@@ -47,12 +48,13 @@ std::vector<int> SearchManager::build_and_validate_queues(const std::vector<Prio
 }
 
 // ** Inicializacion del motor de busqueda, debe ser invocado en el hilo principal **
-void SearchManager::init(std::string path_books, const std::vector<PriorityEntry> &priority_config) {
+void SearchManager::init(std::string path_books, const std::vector<PriorityEntry> &priority_config, int n_replicas) {
+	
 
 	std::unique_lock<std::shared_mutex> lock(manager_mtx);
 	if (is_running)
 		return;
-
+	std::cout << "[SEARCH MANAGER] Iniciando motor de busqueda...\n";
 	// Iniciar scheduler
 	std::vector<int> extracted_weights = build_and_validate_queues(priority_config);
 	idx_shutdown_queue = extracted_weights.size();
@@ -68,16 +70,17 @@ void SearchManager::init(std::string path_books, const std::vector<PriorityEntry
 	}
 
 	// Lanzar workers
-	unsigned int cores = std::thread::hardware_concurrency() * FACTOR;
-	unsigned int base_threads = (cores != 0) ? cores : N_SEARCH_SERVICE;
+	unsigned int cores = std::thread::hardware_concurrency() * Config::FACTOR;
+	unsigned int base_threads = (cores != 0) ? cores : n_replicas;
 	base_threads = std::min(base_threads, (unsigned int)MAX_ALLOWED_THREADS);
-	int n_threads_per_replica = std::max(1u, base_threads / N_SEARCH_SERVICE);
+	int n_threads_per_replica = std::max(1u, base_threads / n_replicas);
 
-	searchers_threads.reserve(N_SEARCH_SERVICE);
-	searchers.reserve(N_SEARCH_SERVICE);
+	searchers_threads.reserve(n_replicas);
+	searchers.reserve(n_replicas);
 
-	for (int i = 0; i < N_SEARCH_SERVICE; i++) {
-		searchers.push_back(std::make_unique<SearchService>(library, n_threads_per_replica));
+	for (int i = 0; i < n_replicas; i++) {
+		int replica_id = i+1;
+		searchers.push_back(std::make_unique<SearchService>(replica_id, library, n_threads_per_replica));
 		searchers_threads.emplace_back(std::ref(*searchers.back()));
 	}
 
@@ -122,11 +125,12 @@ InternalSearchRequest SearchManager::get_search_request() { // Bloqueante
 }
 
 void SearchManager::shutdown() {
-
 	std::unique_lock<std::shared_mutex> lock(manager_mtx);
 	if (!is_running)
 		return;
 	is_running = false;
+
+	std::cout << "[SEARCH MANAGER] Recibida señal de apagado, apagando motor de busqueda...\n";
 
 	int n_searchers = static_cast<int>(searchers_threads.size());
 
@@ -139,6 +143,7 @@ void SearchManager::shutdown() {
 
 	searchers_threads.clear();
 	searchers.clear();
+	std::cout << std::format("[SEARCH MANAGER] Replicas apagadas. Motor de busqueda finalizado.\n");
 }
 
 SearchManager::~SearchManager() { shutdown(); }
