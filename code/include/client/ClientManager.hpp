@@ -11,6 +11,7 @@
 #include "Dictionary.hpp"
 #include <vector>
 #include <thread>
+#include <csignal>
 
 class ClientManager {
 private:
@@ -26,5 +27,5 @@ public:
     ClientManager(int total_clients);
     ~ClientManager();
 
-    void start_simulation(const std::string &simulation_path);
+    void start_simulation(const std::string &simulation_path, const volatile sig_atomic_t& shutdown_flag);
 };

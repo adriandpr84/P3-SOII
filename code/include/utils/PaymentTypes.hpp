@@ -11,9 +11,10 @@
 #include <sys/ipc.h>
 #include <sys/msg.h>
 
-constexpr key_t IPC_PAYMENT_KEY = 0x1234; 
+constexpr key_t IPC_PAYMENT_KEY = 0xADA99; 
 
 constexpr long MSG_TYPE_REQUEST = 1; 
+constexpr long RESPONSE_OFFSET = 10000; 
 
 struct PaymentMessage {
     long mtype;             

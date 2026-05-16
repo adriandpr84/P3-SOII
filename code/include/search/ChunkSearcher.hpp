@@ -13,6 +13,7 @@
 #include "utils/Occurrence.hpp"
 #include "utils/SearchResultsTypes.hpp"
 #include "utils/SearchTypes.hpp"
+#include "payment/SearchMonitor.hpp"
 #include <condition_variable>
 #include <fstream>
 #include <future>
@@ -27,11 +28,11 @@ class ChunkSearcher {
 
 	ConcurrentQueue<ChunkTask> &task_queue;
 
-	ChunkResult read_file(const ChunkTask &task);
+	ChunkResult read_file(const ChunkTask &task, SearchMonitor* monitor);
 	std::string prepare_initial_context(std::ifstream &file, int start_line);
 
 	void process_line(std::string &line, int line_num, const std::string &previous_context, const ChunkTask &task,
-	                  ChunkResult &result);
+	                  ChunkResult &result, SearchMonitor* monitor);
 
 	void fetch_next_chunk_word(std::ifstream &file, ChunkResult &result);
 

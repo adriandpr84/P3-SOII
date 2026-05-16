@@ -3,7 +3,6 @@
  * Program      : Dictionary.cpp
  * Author       : Manuel Martín-Tembleque García-Serrano.
  * Purpose      : Gestionar las palabras que se pueden buscar. Al crear el usuario se escoge una palabra al azar.
- *                Puede inicializarse leyendo un archivo o con palabras hardcodeadas.
  */
 
 
@@ -14,11 +13,11 @@ Dictionary::Dictionary() {
     rng = std::mt19937(rd());
 
     words = {
-        "sistemas", "operativos", "concurrencia", "hilos", 
+        "como", "más", "la", "por", 
         "procesos", "memoria", "mutex", "semaforo", "computador", "red"
     };
 }
-
+// Devuelve una palabra garantizando seguridad ante acceso concurrente.
 std::string Dictionary::get_random_word() {
     std::lock_guard<std::mutex> lock(dict_mutex);
     if (words.empty()) return "";

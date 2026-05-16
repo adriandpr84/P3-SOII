@@ -31,7 +31,7 @@ $(BIN_DIR):
 	mkdir -p $(BIN_DIR)
 
 run: all
-	./$(TARGET)
+	./$(TARGET) $(ARGS)
 
 clean: clean-test clean-results
 	rm -rf $(OBJ_DIR) $(BIN_DIR)

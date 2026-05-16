@@ -11,14 +11,14 @@
 #include <stdexcept>
 
 PaymentProxy::PaymentProxy() : msgid(-1) {}
-
+// Obtiene el descriptor de la cola IPC preexistente generada por el proceso hijo.
 void PaymentProxy::init() {
     msgid = msgget(IPC_PAYMENT_KEY, 0666 | IPC_CREAT);
     if (msgid == -1) {
         throw std::runtime_error("[PROXY PAGO] Error fatal: No se pudo conectar a la cola IPC.");
     }
 }
-
+// Método para procesar un pago, que envía una petición a través de la cola IPC y espera la respuesta.
 int PaymentProxy::process_payment(int client_id) {
     PaymentMessage msg;
     msg.mtype = MSG_TYPE_REQUEST; 
@@ -31,14 +31,14 @@ int PaymentProxy::process_payment(int client_id) {
         return 0;
     }
 
-    if (msgrcv(msgid, &msg, sizeof(PaymentMessage) - sizeof(long), client_id, 0) == -1) {
+    if (msgrcv(msgid, &msg, sizeof(PaymentMessage) - sizeof(long), client_id + RESPONSE_OFFSET, 0) == -1) {
         std::cerr << "[PROXY PAGO] Error al recibir respuesta para el cliente " << client_id << "\n";
         return 0;
     }
 
     return msg.recharged_balance;
 }
-
+// Método para enviar una señal de apagado al proceso de pagos a través de la cola IPC.
 void PaymentProxy::shutdown_remote_system() {
     PaymentMessage msg;
     msg.mtype = MSG_TYPE_REQUEST;

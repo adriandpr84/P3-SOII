@@ -16,12 +16,13 @@ private:
     ClientType type;
     int balance;
     std::string target_word;
+    const std::string& simulation_path;
 
     void save_results_to_file(const SearchResult& result);
     
 
 public:
-    Client(int _id, ClientType _type, int _balance, std::string _target_word);
+    Client(int _id, ClientType _type, int _balance, std::string _target_word, const std::string& simulation_path);
     
     void operator()();
 };

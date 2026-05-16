@@ -8,26 +8,28 @@
 
 #pragma once
 
-#include "utils/SearchTypes.hpp"
+#include "ChunkSearcher.hpp"
+#include "payment/SearchMonitor.hpp"
 #include "utils/SearchResultsTypes.hpp"
-#include "ChunkSearcher.hpp" 
+#include "utils/SearchTypes.hpp"
 #include <condition_variable>
 #include <future>
 #include <mutex>
 #include <queue>
-#include <semaphore>
 #include <string>
 #include <vector>
 
 class SearchService {
   private:
+	int replica_id;
 	const std::vector<BookMetadata> library;
 	int thread_count;
 	std::vector<int> chunks_per_book;
 	std::vector<std::thread> chunk_threads;
 	ConcurrentQueue<ChunkTask> task_queue;
 
-	void produce_tasks(const std::string &target_word, std::vector<std::future<ChunkResult>> &chunks_futures);
+	void produce_tasks(const std::string &target_word, std::vector<std::future<ChunkResult>> &chunks_futures,
+	                   SearchMonitor* monitor);
 
 	int precalculate_chunks();
 
@@ -36,8 +38,8 @@ class SearchService {
 	void stop_workers();
 
   public:
-	SearchService(std::vector<BookMetadata> _library, int _thread_count)
-	    : library(std::move(_library)), thread_count(_thread_count) {}
+	SearchService(int _replica_id, std::vector<BookMetadata> _library, int _thread_count)
+	    : replica_id(_replica_id), library(std::move(_library)), thread_count(_thread_count) {}
 	~SearchService();
 
 	void operator()();

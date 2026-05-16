@@ -1,7 +1,7 @@
 /**
  * Project      : Practica 3 de Sistemas Operativos II
  * Program      : SSOOIIGLE.cpp
- * Author       : Manuel Martín-Tembleque García-Serrano.
+ * Author       : Manuel Martín-Tembleque García-Serrano & Adrián Díaz-Plaza Remesal.
  * Purpose      : Esta clase realiza la simulación dividiendo el sistema en 2 procesos con fork().
  */
 
@@ -10,28 +10,122 @@
 #include "payment/PaymentProxy.hpp"
 #include "payment/PaymentProcess.hpp"
 #include "utils/CommonTypes.hpp"
+#include "utils/SystemConfig.hpp"
 #include <format>
 #include <iostream>
 #include <string>
 #include <vector>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <csignal>   
 
-int main(int argc, char* argv[]) {
-    int num_clients = 50; 
+volatile sig_atomic_t g_shutdown_requested = 0;
+// Manejador de señal para SIGINT.
+void handle_sigint(int sig) {
+    (void)sig;
+    g_shutdown_requested = 1;
+    std::signal(SIGINT, SIG_DFL);
+}
+// Estructura para almacenar la configuración de la simulación, con valores por defecto.
+struct SimulationConfig {
+    int num_clients = 50;
+    int num_replicas = 4;
+    std::string books_path = "./libros"; 
+};
+// Función para parsear los argumentos de línea de comandos y llenar la estructura de configuración.    
+SimulationConfig parse_arguments(int argc, char* argv[]) {
+    SimulationConfig config;
+    
     if (argc > 1) {
-        try { num_clients = std::stoi(argv[1]); } 
-        catch (...) { 
-            std::cerr << "[ADVERTENCIA] Argumento inválido. Usando 50 clientes por defecto.\n";
-            num_clients = 50; 
-        }
+        try { config.num_clients = std::stoi(argv[1]); } 
+        catch (...) { std::cerr << "[AVISO] Fallo al leer clientes. Usando 50 por defecto.\n"; }
+    }
+    
+    if (argc > 2) {
+        try { config.num_replicas = std::stoi(argv[2]); } 
+        catch (...) { std::cerr << "[AVISO] Fallo al leer réplicas. Usando 4 por defecto.\n"; }
+    }
+    
+    if (argc > 3) {
+        config.books_path = argv[3]; 
+    }
+    
+    if (argc > 4){
+        throw std::invalid_argument(std::format("Uso: {} clientes replicas ruta_libros\n", argv[0]));
+    }
+    return config;
+}
+// Agrupa la lógica de arranque del motor y del proxy IPC.
+bool initialize_systems(const SimulationConfig& config) {
+    try {
+        PaymentProxy::get_instance().init();
+
+        std::vector<PriorityEntry> priorities = {
+            {80, {ClientType::PREMIUM_UNLIMITED, ClientType::PREMIUM_LIMITED}},
+            {20, {ClientType::FREE}}
+        };
+
+        SearchManager::get_instance().init(config.books_path, priorities, config.num_replicas);
+        return true;
+    } catch (const std::exception& e) {
+        std::cerr << "[ERROR CRÍTICO] Fallo en la inicialización: " << e.what() << "\n";
+        return false;
+    }
+}
+// Cierra de forma ordenada el gestor de búsquedas y notifica al proceso de pago
+void shutdown_systems(pid_t child_pid) {
+    std::cout << "\n[MAIN] Apagando el motor de búsqueda...\n";
+    SearchManager::get_instance().shutdown();
+    
+    std::cout << "[MAIN] Enviando señal de apagado al sistema de pago...\n";
+    PaymentProxy::get_instance().shutdown_remote_system();
+
+    waitpid(child_pid, nullptr, 0);
+}
+// Función principal para ejecutar la lógica del proceso padre, que maneja la simulación de clientes y coordina el apagado.
+int run_parent_process(pid_t child_pid, const SimulationConfig& config) {
+    std::cout << std::format("[MAIN] Proceso principal (PID: {}). Hijo creado para pagos (PID: {}).\n", getpid(), child_pid);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+    if (!initialize_systems(config)) {
+        PaymentProxy::get_instance().shutdown_remote_system();
+        waitpid(child_pid, nullptr, 0);
+        return 1;
     }
 
-    std::string books_path = "./libros"; 
+    try {
+        ClientManager client_manager(config.num_clients);
+
+        client_manager.start_simulation(Config::PATH_RESULTS, g_shutdown_requested);
+        
+        if (g_shutdown_requested) {
+            std::cout << "\n[MAIN] Simulación finalizada prematuramente por el usuario.\n";
+        } else {
+            std::cout << "\n[MAIN] Todos los clientes han sido atendidos.\n";
+        }
+    } catch (const std::exception& e) {
+        std::cerr << std::format("[ERROR CRÍTICO] Simulación interrumpida: {}\n", e.what());
+    }
+
+    shutdown_systems(child_pid);
+    return 0;
+}
+
+int main(int argc, char* argv[]) {
+    std::signal(SIGINT, handle_sigint);
+    SimulationConfig config;
+
+    try{
+        config = parse_arguments(argc, argv);
+    }catch (const std::exception& e) {
+        std::cerr << std::format("[ERROR] {}\n", e.what());
+    }
 
     std::cout << "=== Iniciando Buscador SSOOIIGLE ===\n";
-    std::cout << "Clientes a simular: " << num_clients << "\n\n";
-
+    std::cout << std::format("Clientes: {} | Réplicas: {} | Directorio: {}\n\n", 
+                             config.num_clients, config.num_replicas, config.books_path);
+    // Crear un proceso hijo para el sistema de pagos.
     pid_t pid = fork();
 
     if (pid < 0) {
@@ -39,53 +133,17 @@ int main(int argc, char* argv[]) {
         return 1;
     } 
     else if (pid == 0) {
-
+        // Código exclusivo para el proceso hijo.
+        std::signal(SIGINT, SIG_IGN); 
         PaymentProcess::run_server();
-        
         return 0; 
     } 
     else {
-
-        std::cout << std::format("[MAIN] Proceso principal (PID: {}). Hijo creado para pagos (PID: {}).\n", getpid(), pid);
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
-
-        try {
-            PaymentProxy::get_instance().init();
-        } catch (const std::exception& e) {
-            std::cerr << e.what() << "\n";
-            waitpid(pid, nullptr, 0);
-            return 1;
-        }
-
-        std::vector<PriorityEntry> priorities = {
-            {80, {ClientType::PREMIUM_UNLIMITED, ClientType::PREMIUM_LIMITED}},
-            {20, {ClientType::FREE}}
-        };
-
-        try {
-            SearchManager::get_instance().init(books_path, priorities);
-        } catch (const std::exception& e) {
-            std::cerr << "[ERROR CRÍTICO] " << e.what() << "\n";
-            PaymentProxy::get_instance().shutdown_remote_system();
-            waitpid(pid, nullptr, 0);
-            return 1;
-        }
-
-        ClientManager client_manager(num_clients);
-
-        client_manager.start_simulation("simulation_results");
-
-        std::cout << "\n[MAIN] Todos los clientes han sido atendidos.\n";
-        std::cout << "[MAIN] Apagando el motor de búsqueda...\n";
-        SearchManager::get_instance().shutdown();
-        
-        std::cout << "[MAIN] Enviando señal de apagado al sistema de pago...\n";
-        PaymentProxy::get_instance().shutdown_remote_system();
-
-        waitpid(pid, nullptr, 0);
+        // Código exclusivo para el proceso padre.
+        int exit_status = run_parent_process(pid, config);
         
         std::cout << "=== Fin de la simulación ===\n";
-        return 0;
+        std::cout << std::format("Resultados disponibles en: {}\n", Config::PATH_RESULTS);
+        return exit_status;
     }
 }
